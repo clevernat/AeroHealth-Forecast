@@ -96,11 +96,13 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
       return;
     }
 
-    mapRef.current = L.map(mapContainerRef.current, {
-      zoomControl: false as any, // Disable default zoom control
-    } as L.MapOptions).setView([latitude, longitude], 12);
+    mapRef.current = L.map(mapContainerRef.current).setView(
+      [latitude, longitude],
+      12
+    );
 
-    // Add zoom control in top-right position
+    // Remove default zoom control and add it in top-right position
+    mapRef.current.zoomControl?.remove();
     L.control.zoom({ position: "topright" }).addTo(mapRef.current);
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
