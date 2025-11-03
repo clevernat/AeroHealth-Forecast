@@ -15,6 +15,7 @@ import InfoModal from "@/components/InfoModal";
 import HourlyForecast from "@/components/HourlyForecast";
 import DailyForecast from "@/components/DailyForecast";
 import NotificationBanner from "@/components/NotificationBanner";
+import LocationSearch from "@/components/LocationSearch";
 
 // Dynamically import MapView and HistoricalData to avoid SSR issues
 const MapView = dynamic(() => import("@/components/MapView"), {
@@ -52,6 +53,27 @@ export default function Home() {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [pollutionSources, setPollutionSources] = useState<any[]>([]);
+  const [locationName, setLocationName] = useState<string>("");
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+
+  // Fetch location name from coordinates
+  const fetchLocationName = useCallback(
+    async (latitude: number, longitude: number) => {
+      try {
+        const response = await fetch(
+          `/api/reverse-geocode?lat=${latitude}&lon=${longitude}`
+        );
+        if (response.ok) {
+          const data = await response.json();
+          setLocationName(data.locationName || "Unknown Location");
+        }
+      } catch (err) {
+        console.error("Reverse geocoding error:", err);
+        setLocationName(`${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
+      }
+    },
+    []
+  );
 
   useEffect(() => {
     async function fetchLocation() {
@@ -62,15 +84,18 @@ export default function Home() {
           longitude: position.coords.longitude,
         };
         setLocation(coords);
+        fetchLocationName(coords.latitude, coords.longitude);
       } catch (err) {
         // Default to a sample location (e.g., New York City) if geolocation fails
         console.error("Geolocation error:", err);
-        setLocation({ latitude: 40.7128, longitude: -74.006 });
+        const defaultCoords = { latitude: 40.7128, longitude: -74.006 };
+        setLocation(defaultCoords);
+        setLocationName("New York City, NY");
       }
     }
 
     fetchLocation();
-  }, []);
+  }, [fetchLocationName]);
 
   // Fetch data function (memoized with useCallback)
   const fetchData = useCallback(
@@ -193,6 +218,38 @@ export default function Home() {
     setModalInfo({ type: "allergen", id: allergen });
   };
 
+  // Handle location search selection
+  const handleLocationSelect = (
+    latitude: number,
+    longitude: number,
+    name: string
+  ) => {
+    const newLocation = { latitude, longitude };
+    setLocation(newLocation);
+    setLocationName(name);
+    fetchData(newLocation);
+  };
+
+  // Handle "Use My Current Location" button
+  const handleUseCurrentLocation = async () => {
+    setIsLoadingLocation(true);
+    try {
+      const position = await getUserLocation();
+      const coords = {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+      };
+      setLocation(coords);
+      fetchLocationName(coords.latitude, coords.longitude);
+      fetchData(coords);
+    } catch (err) {
+      console.error("Geolocation error:", err);
+      setError("Failed to get your location. Please try searching instead.");
+    } finally {
+      setIsLoadingLocation(false);
+    }
+  };
+
   if (loading) {
     return (
       <main className="min-h-screen flex items-center justify-center p-8">
@@ -275,27 +332,21 @@ export default function Home() {
           <h1 className="text-5xl md:text-6xl font-extrabold mb-4 text-white drop-shadow-2xl">
             AeroHealth Forecast
           </h1>
-          <p className="text-xl text-white font-semibold mb-2 drop-shadow-lg">
+          <p className="text-xl text-white font-semibold mb-6 drop-shadow-lg">
             Real-time Air Quality & Allergen Monitoring
           </p>
-          <div className="flex flex-col md:flex-row items-center justify-center gap-3 mt-4">
-            {location && (
-              <div className="inline-flex items-center gap-2 glass-dark px-5 py-2.5 rounded-full text-sm text-white font-medium border border-white/20">
-                <svg
-                  className="w-4 h-4"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                {location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}
-              </div>
-            )}
 
+          {/* Location Search */}
+          <div className="mb-6 flex justify-center">
+            <LocationSearch
+              onLocationSelect={handleLocationSelect}
+              onUseCurrentLocation={handleUseCurrentLocation}
+              currentLocationName={locationName}
+              isLoadingLocation={isLoadingLocation}
+            />
+          </div>
+
+          <div className="flex flex-col md:flex-row items-center justify-center gap-3 mt-4">
             {lastUpdated && (
               <div className="inline-flex items-center gap-2 glass-dark px-5 py-2.5 rounded-full text-sm text-white/80 font-medium border border-white/20">
                 <svg
