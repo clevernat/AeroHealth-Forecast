@@ -378,11 +378,7 @@ export default function Home() {
                   aqi={aqiData.aqi}
                   category={aqiData.category}
                   location={locationName}
-                  pollutants={{
-                    pm2_5: aqiData.pollutants.pm2_5,
-                    pm10: aqiData.pollutants.pm10,
-                    ozone: aqiData.pollutants.ozone,
-                  }}
+                  pollutants={aqiData.pollutants}
                 />
                 <CommunityReports
                   latitude={location.latitude}
@@ -556,11 +552,7 @@ export default function Home() {
             aqi={aqiData.aqi}
             category={aqiData.category}
             healthConditions={healthConditions}
-            pollutants={{
-              pm2_5: aqiData.pollutants.pm2_5,
-              pm10: aqiData.pollutants.pm10,
-              ozone: aqiData.pollutants.ozone,
-            }}
+            pollutants={aqiData.pollutants}
           />
         )}
 
