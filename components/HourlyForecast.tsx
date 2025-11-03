@@ -20,6 +20,8 @@ interface HourlyForecastProps {
 export default function HourlyForecast({ data }: HourlyForecastProps) {
   const chartData = data.map((item) => ({
     time: format(new Date(item.timestamp), "ha"),
+    fullDateTime: format(new Date(item.timestamp), "EEE, MMM d, h:mm a"),
+    timestamp: item.timestamp,
     AQI: item.aqi,
     "Tree Pollen": item.pollen.tree,
     "Grass Pollen": item.pollen.grass,
@@ -65,10 +67,15 @@ export default function HourlyForecast({ data }: HourlyForecastProps) {
           Air Quality Index
         </h3>
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={chartData}>
+          <LineChart
+            data={chartData}
+            margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
+          >
             <CartesianGrid
               strokeDasharray="3 3"
-              stroke="rgba(255,255,255,0.1)"
+              stroke="rgba(255,255,255,0.3)"
+              vertical={true}
+              horizontal={true}
             />
             <XAxis
               dataKey="time"
@@ -81,11 +88,18 @@ export default function HourlyForecast({ data }: HourlyForecastProps) {
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: "rgba(15, 23, 42, 0.9)",
+                backgroundColor: "rgba(15, 23, 42, 0.95)",
                 border: "1px solid rgba(255,255,255,0.2)",
                 borderRadius: "12px",
                 color: "#fff",
                 fontWeight: "bold",
+                padding: "12px",
+              }}
+              labelStyle={{ color: "#60a5fa", marginBottom: "8px" }}
+              labelFormatter={(value) => {
+                // Find the full date/time from chartData
+                const dataPoint = chartData.find((d) => d.time === value);
+                return dataPoint ? dataPoint.fullDateTime : value;
               }}
             />
             <Legend wrapperStyle={{ color: "#fff", fontWeight: "bold" }} />
@@ -95,6 +109,12 @@ export default function HourlyForecast({ data }: HourlyForecastProps) {
               stroke="#60a5fa"
               strokeWidth={3}
               dot={{ fill: "#60a5fa", r: 4 }}
+              activeDot={{
+                r: 8,
+                fill: "#60a5fa",
+                stroke: "#fff",
+                strokeWidth: 2,
+              }}
             />
           </LineChart>
         </ResponsiveContainer>
@@ -118,10 +138,15 @@ export default function HourlyForecast({ data }: HourlyForecastProps) {
           Pollen Levels
         </h3>
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={chartData}>
+          <LineChart
+            data={chartData}
+            margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
+          >
             <CartesianGrid
               strokeDasharray="3 3"
-              stroke="rgba(255,255,255,0.1)"
+              stroke="rgba(255,255,255,0.3)"
+              vertical={true}
+              horizontal={true}
             />
             <XAxis
               dataKey="time"
@@ -134,11 +159,18 @@ export default function HourlyForecast({ data }: HourlyForecastProps) {
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: "rgba(15, 23, 42, 0.9)",
+                backgroundColor: "rgba(15, 23, 42, 0.95)",
                 border: "1px solid rgba(255,255,255,0.2)",
                 borderRadius: "12px",
                 color: "#fff",
                 fontWeight: "bold",
+                padding: "12px",
+              }}
+              labelStyle={{ color: "#34d399", marginBottom: "8px" }}
+              labelFormatter={(value) => {
+                // Find the full date/time from chartData
+                const dataPoint = chartData.find((d) => d.time === value);
+                return dataPoint ? dataPoint.fullDateTime : value;
               }}
             />
             <Legend wrapperStyle={{ color: "#fff", fontWeight: "bold" }} />
@@ -148,6 +180,12 @@ export default function HourlyForecast({ data }: HourlyForecastProps) {
               stroke="#34d399"
               strokeWidth={3}
               dot={{ fill: "#34d399", r: 4 }}
+              activeDot={{
+                r: 8,
+                fill: "#34d399",
+                stroke: "#fff",
+                strokeWidth: 2,
+              }}
             />
             <Line
               type="monotone"
@@ -155,6 +193,12 @@ export default function HourlyForecast({ data }: HourlyForecastProps) {
               stroke="#fbbf24"
               strokeWidth={3}
               dot={{ fill: "#fbbf24", r: 4 }}
+              activeDot={{
+                r: 8,
+                fill: "#fbbf24",
+                stroke: "#fff",
+                strokeWidth: 2,
+              }}
             />
             <Line
               type="monotone"
@@ -162,6 +206,12 @@ export default function HourlyForecast({ data }: HourlyForecastProps) {
               stroke="#f87171"
               strokeWidth={3}
               dot={{ fill: "#f87171", r: 4 }}
+              activeDot={{
+                r: 8,
+                fill: "#f87171",
+                stroke: "#fff",
+                strokeWidth: 2,
+              }}
             />
           </LineChart>
         </ResponsiveContainer>
