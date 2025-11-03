@@ -1,27 +1,38 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { AQIData, HourlyForecast, DailyForecast } from '@/types';
-import { getAQICategory, getPrimaryPollutant } from '@/lib/utils';
+import { NextRequest, NextResponse } from "next/server";
+import { AQIData, HourlyForecast, DailyForecast } from "@/types";
+import { getAQICategory, getPrimaryPollutant } from "@/lib/utils";
+
+// Force dynamic rendering and disable caching for real-time data
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
-  const latitude = searchParams.get('latitude');
-  const longitude = searchParams.get('longitude');
+  const latitude = searchParams.get("latitude");
+  const longitude = searchParams.get("longitude");
 
   if (!latitude || !longitude) {
     return NextResponse.json(
-      { error: 'Latitude and longitude are required' },
+      { error: "Latitude and longitude are required" },
       { status: 400 }
     );
   }
 
   try {
-    // Fetch air quality data from Open-Meteo
+    // Fetch air quality data from Open-Meteo with cache-busting and real-time settings
     const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${latitude}&longitude=${longitude}&hourly=pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,sulphur_dioxide,ozone,us_aqi&timezone=auto&forecast_days=5`;
-    
-    const response = await fetch(aqiUrl);
-    
+
+    const response = await fetch(aqiUrl, {
+      cache: "no-store", // Disable Next.js caching for real-time data
+      headers: {
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        Pragma: "no-cache",
+        Expires: "0",
+      },
+    });
+
     if (!response.ok) {
-      throw new Error('Failed to fetch air quality data');
+      throw new Error("Failed to fetch air quality data");
     }
 
     const data = await response.json();
@@ -29,7 +40,7 @@ export async function GET(request: NextRequest) {
     // Process current AQI data (first hour)
     const currentIndex = 0;
     const currentAQI = data.hourly.us_aqi[currentIndex] || 0;
-    
+
     const pollutants = {
       pm2_5: data.hourly.pm2_5?.[currentIndex],
       pm10: data.hourly.pm10?.[currentIndex],
@@ -64,22 +75,26 @@ export async function GET(request: NextRequest) {
     // Process 5-day forecast
     const dailyForecast: DailyForecast[] = [];
     const hoursPerDay = 24;
-    
+
     for (let day = 0; day < 5; day++) {
       const startIdx = day * hoursPerDay;
       const endIdx = Math.min(startIdx + hoursPerDay, data.hourly.time.length);
-      
+
       if (startIdx >= data.hourly.time.length) break;
 
-      const dayAQIs = data.hourly.us_aqi.slice(startIdx, endIdx).filter((v: number) => v !== null);
-      
+      const dayAQIs = data.hourly.us_aqi
+        .slice(startIdx, endIdx)
+        .filter((v: number) => v !== null);
+
       if (dayAQIs.length === 0) continue;
 
       const peakAQI = Math.max(...dayAQIs);
-      const avgAQI = Math.round(dayAQIs.reduce((a: number, b: number) => a + b, 0) / dayAQIs.length);
-      
+      const avgAQI = Math.round(
+        dayAQIs.reduce((a: number, b: number) => a + b, 0) / dayAQIs.length
+      );
+
       dailyForecast.push({
-        date: data.hourly.time[startIdx].split('T')[0],
+        date: data.hourly.time[startIdx].split("T")[0],
         peakAQI,
         avgAQI,
         peakPollen: {
@@ -96,11 +111,10 @@ export async function GET(request: NextRequest) {
       daily: dailyForecast,
     });
   } catch (error) {
-    console.error('Error fetching AQI data:', error);
+    console.error("Error fetching AQI data:", error);
     return NextResponse.json(
-      { error: 'Failed to fetch air quality data' },
+      { error: "Failed to fetch air quality data" },
       { status: 500 }
     );
   }
 }
-

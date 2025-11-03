@@ -1,34 +1,45 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { PollenData } from '@/types';
-import { getPollenCategory } from '@/lib/utils';
+import { NextRequest, NextResponse } from "next/server";
+import { PollenData } from "@/types";
+import { getPollenCategory } from "@/lib/utils";
+
+// Force dynamic rendering and disable caching for real-time data
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
-  const latitude = searchParams.get('latitude');
-  const longitude = searchParams.get('longitude');
+  const latitude = searchParams.get("latitude");
+  const longitude = searchParams.get("longitude");
 
   if (!latitude || !longitude) {
     return NextResponse.json(
-      { error: 'Latitude and longitude are required' },
+      { error: "Latitude and longitude are required" },
       { status: 400 }
     );
   }
 
   try {
-    // Fetch pollen data from Open-Meteo
+    // Fetch pollen data from Open-Meteo with cache-busting and real-time settings
     const pollenUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${latitude}&longitude=${longitude}&hourly=alder_pollen,birch_pollen,grass_pollen,mugwort_pollen,olive_pollen,ragweed_pollen&timezone=auto&forecast_days=5`;
-    
-    const response = await fetch(pollenUrl);
-    
+
+    const response = await fetch(pollenUrl, {
+      cache: "no-store", // Disable Next.js caching for real-time data
+      headers: {
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        Pragma: "no-cache",
+        Expires: "0",
+      },
+    });
+
     if (!response.ok) {
-      throw new Error('Failed to fetch pollen data');
+      throw new Error("Failed to fetch pollen data");
     }
 
     const data = await response.json();
 
     // Process current pollen data (first hour)
     const currentIndex = 0;
-    
+
     // Aggregate tree pollen (alder, birch, olive)
     const treePollen = [
       data.hourly.alder_pollen?.[currentIndex] || 0,
@@ -92,11 +103,11 @@ export async function GET(request: NextRequest) {
     // Process daily forecast
     const dailyForecast = [];
     const hoursPerDay = 24;
-    
+
     for (let day = 0; day < 5; day++) {
       const startIdx = day * hoursPerDay;
       const endIdx = Math.min(startIdx + hoursPerDay, data.hourly.time.length);
-      
+
       if (startIdx >= data.hourly.time.length) break;
 
       // Calculate peak pollen for each type
@@ -122,7 +133,7 @@ export async function GET(request: NextRequest) {
       }
 
       dailyForecast.push({
-        date: data.hourly.time[startIdx].split('T')[0],
+        date: data.hourly.time[startIdx].split("T")[0],
         tree: peakTree,
         grass: peakGrass,
         weed: peakWeed,
@@ -135,11 +146,10 @@ export async function GET(request: NextRequest) {
       daily: dailyForecast,
     });
   } catch (error) {
-    console.error('Error fetching pollen data:', error);
+    console.error("Error fetching pollen data:", error);
     return NextResponse.json(
-      { error: 'Failed to fetch pollen data' },
+      { error: "Failed to fetch pollen data" },
       { status: 500 }
     );
   }
 }
-

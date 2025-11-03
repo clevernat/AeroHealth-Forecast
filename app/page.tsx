@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import {
   AQIData,
@@ -41,6 +41,8 @@ export default function Home() {
   const [activeView, setActiveView] = useState<
     "dashboard" | "hourly" | "daily" | "map"
   >("dashboard");
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     async function fetchLocation() {
@@ -61,17 +63,32 @@ export default function Home() {
     fetchLocation();
   }, []);
 
-  useEffect(() => {
-    if (!location) return;
-
-    async function fetchData(loc: { latitude: number; longitude: number }) {
-      setLoading(true);
+  // Fetch data function (memoized with useCallback)
+  const fetchData = useCallback(
+    async (
+      loc: { latitude: number; longitude: number },
+      isManualRefresh = false
+    ) => {
+      if (isManualRefresh) {
+        setIsRefreshing(true);
+      } else {
+        setLoading(true);
+      }
       setError(null);
 
       try {
-        // Fetch AQI data
+        // Add timestamp to prevent caching and ensure real-time data
+        const timestamp = new Date().getTime();
+
+        // Fetch AQI data with cache-busting
         const aqiResponse = await fetch(
-          `/api/aqi?latitude=${loc.latitude}&longitude=${loc.longitude}`
+          `/api/aqi?latitude=${loc.latitude}&longitude=${loc.longitude}&t=${timestamp}`,
+          {
+            cache: "no-store",
+            headers: {
+              "Cache-Control": "no-cache",
+            },
+          }
         );
         if (!aqiResponse.ok) throw new Error("Failed to fetch AQI data");
         const aqiJson = await aqiResponse.json();
@@ -79,9 +96,15 @@ export default function Home() {
         setHourlyForecast(aqiJson.hourly);
         setDailyForecast(aqiJson.daily);
 
-        // Fetch pollen data
+        // Fetch pollen data with cache-busting
         const pollenResponse = await fetch(
-          `/api/pollen?latitude=${loc.latitude}&longitude=${loc.longitude}`
+          `/api/pollen?latitude=${loc.latitude}&longitude=${loc.longitude}&t=${timestamp}`,
+          {
+            cache: "no-store",
+            headers: {
+              "Cache-Control": "no-cache",
+            },
+          }
         );
         if (!pollenResponse.ok) throw new Error("Failed to fetch pollen data");
         const pollenJson = await pollenResponse.json();
@@ -101,15 +124,43 @@ export default function Home() {
             peakPollen: pollenJson.daily[index] || item.peakPollen,
           }))
         );
+
+        // Update last updated timestamp
+        setLastUpdated(new Date());
       } catch (err) {
         setError(err instanceof Error ? err.message : "An error occurred");
       } finally {
         setLoading(false);
+        setIsRefreshing(false);
       }
-    }
+    },
+    []
+  );
 
+  // Initial data fetch when location is available
+  useEffect(() => {
+    if (!location) return;
     fetchData(location);
-  }, [location]);
+  }, [location, fetchData]);
+
+  // Auto-refresh every 30 minutes
+  useEffect(() => {
+    if (!location) return;
+
+    const intervalId = setInterval(() => {
+      console.log("Auto-refreshing data...");
+      fetchData(location);
+    }, 30 * 60 * 1000); // 30 minutes in milliseconds
+
+    return () => clearInterval(intervalId);
+  }, [location, fetchData]);
+
+  // Manual refresh handler
+  const handleManualRefresh = () => {
+    if (location && !isRefreshing) {
+      fetchData(location, true);
+    }
+  };
 
   const handlePollutantClick = (pollutant: string) => {
     setModalInfo({ type: "pollutant", id: pollutant });
@@ -204,18 +255,68 @@ export default function Home() {
           <p className="text-xl text-white font-semibold mb-2 drop-shadow-lg">
             Real-time Air Quality & Allergen Monitoring
           </p>
-          {location && (
-            <div className="inline-flex items-center gap-2 glass-dark px-5 py-2.5 rounded-full text-sm text-white font-medium mt-3 border border-white/20">
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <div className="flex flex-col md:flex-row items-center justify-center gap-3 mt-4">
+            {location && (
+              <div className="inline-flex items-center gap-2 glass-dark px-5 py-2.5 rounded-full text-sm text-white font-medium border border-white/20">
+                <svg
+                  className="w-4 h-4"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                {location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}
+              </div>
+            )}
+
+            {lastUpdated && (
+              <div className="inline-flex items-center gap-2 glass-dark px-5 py-2.5 rounded-full text-sm text-white/80 font-medium border border-white/20">
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                Updated: {lastUpdated.toLocaleTimeString()}
+              </div>
+            )}
+
+            <button
+              onClick={handleManualRefresh}
+              disabled={isRefreshing}
+              className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold border transition-all duration-200 ${
+                isRefreshing
+                  ? "glass-dark text-white/50 border-white/10 cursor-not-allowed"
+                  : "bg-gradient-to-r from-blue-500 to-purple-600 text-white border-white/30 hover:shadow-xl hover:scale-105"
+              }`}
+            >
+              <svg
+                className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path
-                  fillRule="evenodd"
-                  d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
-                  clipRule="evenodd"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                 />
               </svg>
-              {location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}
-            </div>
-          )}
+              {isRefreshing ? "Refreshing..." : "Refresh Data"}
+            </button>
+          </div>
         </header>
 
         {/* Navigation */}
