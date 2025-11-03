@@ -88,13 +88,18 @@ export async function GET(request: NextRequest) {
       const startIdx = day * hoursPerDay;
       const endIdx = Math.min(startIdx + hoursPerDay, data.hourly.time.length);
 
-      if (startIdx >= data.hourly.time.length) break;
+      if (startIdx >= data.hourly.time.length) {
+        break;
+      }
 
       const dayAQIs = data.hourly.us_aqi
         .slice(startIdx, endIdx)
         .filter((v: number) => v !== null);
 
-      if (dayAQIs.length === 0) continue;
+      // Skip days with no valid data OR less than 3 hours of data (incomplete forecast)
+      if (dayAQIs.length < 3) {
+        continue;
+      }
 
       const peakAQI = Math.max(...dayAQIs);
       const avgAQI = Math.round(

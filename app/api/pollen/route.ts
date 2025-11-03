@@ -104,11 +104,14 @@ export async function GET(request: NextRequest) {
     const dailyForecast = [];
     const hoursPerDay = 24;
 
-    for (let day = 0; day < 5; day++) {
+    for (let day = 0; day < 7; day++) {
       const startIdx = day * hoursPerDay;
       const endIdx = Math.min(startIdx + hoursPerDay, data.hourly.time.length);
 
       if (startIdx >= data.hourly.time.length) break;
+
+      // For pollen data, we'll create entries even if data is null (will show as 0)
+      // This is because pollen data availability varies by location and season
 
       // Calculate peak pollen for each type
       let peakTree = 0;
