@@ -81,7 +81,7 @@ export default function DailyForecast({ data }: DailyForecastProps) {
           </svg>
         </div>
         <h2 className="text-3xl font-bold text-white">
-          {forecast.length}-Day Extended Forecast
+          {data.length}-Day Extended Forecast
         </h2>
       </div>
 
