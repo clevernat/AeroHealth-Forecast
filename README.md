@@ -14,6 +14,31 @@ This project directly addresses the **national importance of public health and e
 
 ---
 
+## 🇺🇸 National Importance & Scope
+
+**This project serves the entire United States and addresses a critical national public health need.**
+
+### Why This Matters
+
+- **🏥 Public Health Crisis**: According to the American Lung Association, over **40% of Americans** (137 million people) live in areas with unhealthy air quality
+- **💰 Economic Impact**: Air pollution costs the U.S. economy over **$5 billion annually** in healthcare expenses and lost productivity
+- **👶 Vulnerable Populations**: Children, elderly, pregnant women, and those with respiratory conditions are at highest risk
+- **🌍 Climate Change**: Increasing wildfires, extreme weather, and pollution events make real-time monitoring more critical than ever
+
+### National Coverage
+
+AeroHealth Forecast provides **coast-to-coast coverage** across all 50 states:
+
+- ✅ **25+ Major Metropolitan Areas**: From New York to Los Angeles, Chicago to Miami
+- ✅ **All Geographic Regions**: Northeast, Southeast, Midwest, Southwest, West, Mountain, Alaska, Hawaii
+- ✅ **Location Search**: Any U.S. city, address, or ZIP code
+- ✅ **Real-Time Data**: Updated every 30 minutes nationwide
+- ✅ **Free & Accessible**: No cost barrier for any American
+
+**This is not a local tool—it's a national public health resource.**
+
+---
+
 ## 🎯 Core Mission
 
 Unlike generic weather apps, AeroHealth Forecast focuses specifically on atmospheric conditions that directly impact respiratory health. By combining **real-time air quality data** with **allergen forecasts**, this application serves as a comprehensive respiratory health monitoring system with:
@@ -101,6 +126,33 @@ Unlike generic weather apps, AeroHealth Forecast focuses specifically on atmosph
 - **AQI Legend**: Visual guide showing all AQI categories
 - **Wind Overlay**: Real-time wind direction and speed visualization
 - **Responsive Design**: Works seamlessly on mobile and desktop
+
+### 🗺️ **National Air Quality Map** ⭐ NEW
+
+**Demonstrates National Scope for EB2-NIW Petition**
+
+- **Coast-to-Coast Coverage**: Real-time air quality data across the entire United States
+- **Major Metropolitan Areas**: Covers 25+ major U.S. cities including:
+  - Northeast: New York, Boston, Philadelphia, Albany
+  - Southeast: Atlanta, Miami, Charlotte, Nashville, New Orleans
+  - Midwest: Chicago, Detroit, Minneapolis, St. Louis, Indianapolis
+  - Southwest: Houston, Dallas, Phoenix, San Antonio
+  - West: Los Angeles, San Francisco, Seattle, Portland, Denver, Las Vegas
+  - Mountain: Salt Lake City, Boise
+  - Alaska & Hawaii: Anchorage, Honolulu
+- **Interactive City Markers**: Color-coded circular markers based on current AQI
+- **Click for Details**: Click any city marker to view:
+  - Current AQI value and category
+  - Real-time air quality status
+  - Link to detailed hourly/daily forecasts
+- **National Legend**: Visual AQI scale from Good (green) to Hazardous (maroon)
+- **Automatic Updates**: Data refreshes every 30 minutes
+- **Geographic Center**: Map centered on continental U.S. for optimal viewing
+- **Zoom Controls**: Zoom from national view (zoom 4) to regional detail (zoom 10)
+- **Future Enhancement**: County-level choropleth view (3000+ counties) coming soon
+
+**Why This Matters for National Interest:**
+This feature demonstrates that AeroHealth Forecast serves the **entire nation**, not just a single locality. By providing real-time air quality data from Alaska to Hawaii, from Maine to Florida, the application addresses a **nationwide public health need**. This national scope is critical for the EB2-NIW petition, showing that the project benefits Americans across all 50 states.
 
 ### 🏥 **Health & Personalized Recommendations**
 
@@ -448,7 +500,7 @@ vercel
 
 ### Navigation
 
-**Six Main Views**:
+**Seven Main Views**:
 
 1. **📊 Dashboard** (Default)
 
@@ -487,18 +539,34 @@ vercel
    - Interactive popups with details
    - AQI legend for reference
 
-5. **🏥 Health** (New!)
+5. **📜 History**
+
+   - Compare today's AQI with historical data
+   - View trends from last week, 2 weeks ago, 1 month ago
+   - Percentage change indicators
+   - Smart insights and recommendations
+
+6. **🏥 Health**
 
    - Create personalized health profile
    - Get activity recommendations based on AQI
    - Air purifier usage suggestions
    - Personalized health alerts
 
-6. **📊 Public Health** (New!)
+7. **📊 Public Health**
+
    - City-wide statistics dashboard
    - Population at risk estimates
    - AQI trend analytics
    - Public health recommendations
+
+8. **🌍 National Map** ⭐ NEW
+   - **Coast-to-coast air quality coverage**
+   - Real-time AQI for 25+ major U.S. cities
+   - Interactive color-coded markers
+   - Click any city for detailed AQI information
+   - Demonstrates **national scope** of the application
+   - Serves all 50 states from Alaska to Hawaii
 
 ### Real-Time Features
 
@@ -704,6 +772,7 @@ A: Yes! It's MIT licensed - free for commercial use.
 
 ### Recently Completed ✅
 
+- ✅ **National Air Quality Map**: Coast-to-coast coverage of 25+ major U.S. cities ⭐ NEW
 - ✅ **Location Search**: Search by city name or ZIP code
 - ✅ **Historical Trends**: View past AQI and pollen data with comparisons
 - ✅ **Personalized Recommendations**: Based on health conditions
@@ -743,7 +812,16 @@ _AeroHealth Forecast - Breathe Easier, Live Healthier_
 
 ### Major Features Added
 
-1. **🗺️ Advanced Map Features**
+1. **🌍 National Air Quality Map** ⭐ NEW
+
+   - **Coast-to-coast coverage** of 25+ major U.S. cities
+   - Real-time AQI data from Alaska to Hawaii
+   - Interactive color-coded city markers
+   - Click any city for detailed AQI information
+   - **Demonstrates national scope** for EB2-NIW petition
+   - Serves all 50 states with real-time data
+
+2. **🗺️ Advanced Map Features**
 
    - Location search with geocoding
    - Pollution source mapping (factories, highways, wildfires)
@@ -751,7 +829,7 @@ _AeroHealth Forecast - Breathe Easier, Live Healthier_
    - Wind direction overlay
    - Interactive pollution source markers
 
-2. **📈 Enhanced Forecasting**
+3. **📈 Enhanced Forecasting**
 
    - Extended to 6-7 day forecasts
    - Dual-view 24-hour forecast (Overview + By Pollutant)
@@ -759,21 +837,21 @@ _AeroHealth Forecast - Breathe Easier, Live Healthier_
    - Historical data comparison (1 week, 2 weeks, 1 month)
    - Trend analysis with percentage changes
 
-3. **🏥 Health & Recommendations**
+4. **🏥 Health & Recommendations**
 
    - Personalized health profiles
    - AI-powered activity recommendations
    - Air purifier usage suggestions
    - Condition-specific health alerts
 
-4. **📱 Social & Community**
+5. **📱 Social & Community**
 
    - Share air quality reports (Twitter, Facebook, clipboard, image)
    - Community observation reports
    - Upvote system for community validation
    - Public health dashboard for officials
 
-5. **🎨 UI/UX Improvements**
+6. **🎨 UI/UX Improvements**
    - Sleek, modern, mobile-responsive design
    - Gradient buttons with hover animations
    - Full-screen modals on mobile

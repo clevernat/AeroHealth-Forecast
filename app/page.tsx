@@ -22,7 +22,7 @@ import ShareAQI from "@/components/ShareAQI";
 import CommunityReports from "@/components/CommunityReports";
 import PublicHealthDashboard from "@/components/PublicHealthDashboard";
 
-// Dynamically import MapView and HistoricalData to avoid SSR issues
+// Dynamically import MapView, HistoricalData, and NationalMap to avoid SSR issues
 const MapView = dynamic(() => import("@/components/MapView"), {
   ssr: false,
   loading: () => <div className="text-center p-8">Loading map...</div>,
@@ -33,6 +33,11 @@ const HistoricalData = dynamic(() => import("@/components/HistoricalData"), {
   loading: () => (
     <div className="text-center p-8">Loading historical data...</div>
   ),
+});
+
+const NationalMap = dynamic(() => import("@/components/NationalMap"), {
+  ssr: false,
+  loading: () => <div className="text-center p-8">Loading national map...</div>,
 });
 
 export default function Home() {
@@ -60,6 +65,7 @@ export default function Home() {
     | "history"
     | "health"
     | "community"
+    | "national"
   >("dashboard");
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -474,6 +480,11 @@ export default function Home() {
               label: "Public Health",
               icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z",
             },
+            {
+              id: "national",
+              label: "National Map",
+              icon: "M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
+            },
           ].map((view) => (
             <button
               key={view.id}
@@ -567,6 +578,8 @@ export default function Home() {
             location={locationName}
           />
         )}
+
+        {activeView === "national" && <NationalMap />}
 
         {/* Info Modal */}
         {modalInfo && (
