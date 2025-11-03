@@ -385,10 +385,11 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
               icon: L.divIcon({
                 className: "pollution-source-marker",
                 html: icon,
-                iconSize: [30, 30],
-                iconAnchor: [15, 15], // Center the icon
+                iconSize: [40, 40], // Increased size for better visibility
+                iconAnchor: [20, 20], // Center the larger icon
               }),
-              zIndexOffset: 1000, // Ensure markers appear above other layers
+              zIndexOffset: 10000, // Much higher z-index to ensure visibility
+              pane: "markerPane", // Explicitly use marker pane (highest layer)
             });
 
             if (mapRef.current) {
@@ -735,7 +736,7 @@ function getSourceIcon(
 ): string {
   const emoji = getSourceEmoji(type);
   const color = severity ? getSeverityColor(severity) : "#666";
-  return `<div style="font-size: 24px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); background: ${color}; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; opacity: ${opacity};">${emoji}</div>`;
+  return `<div style="font-size: 28px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5)); background: ${color}; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; opacity: ${opacity}; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.3);">${emoji}</div>`;
 }
 
 function getSourceEmoji(type: string): string {
