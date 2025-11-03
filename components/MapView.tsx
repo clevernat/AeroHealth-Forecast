@@ -59,6 +59,15 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
+  // Update map view when location changes
+  useEffect(() => {
+    if (mapRef.current && mapInitializedRef.current) {
+      console.log(`📍 Location changed to: [${latitude}, ${longitude}]`);
+      mapRef.current.setView([latitude, longitude], 12);
+      setMapCenter([latitude, longitude]);
+    }
+  }, [latitude, longitude]);
+
   // Initialize map
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) {
@@ -447,42 +456,6 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
                 .getCenter()
                 .lat.toFixed(4)}, ${mapRef.current.getCenter().lng.toFixed(4)}]`
             );
-
-            // DEBUG: Add a test marker at the exact map center to verify rendering works
-            const center = mapRef.current.getCenter();
-            const testMarker = L.marker([center.lat, center.lng], {
-              icon: L.divIcon({
-                className: "pollution-source-marker test-marker",
-                html: `<div style="
-                  font-size: 32px;
-                  background: #FF0000;
-                  border-radius: 50%;
-                  width: 50px;
-                  height: 50px;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                  border: 4px solid #FFFFFF;
-                  box-shadow: 0 0 20px rgba(0,0,0,0.8), 0 0 40px #FF0000;
-                  position: relative;
-                  z-index: 10000;
-                  cursor: pointer;
-                ">🎯</div>`,
-                iconSize: [50, 50],
-                iconAnchor: [25, 25],
-              }),
-              zIndexOffset: 10000,
-              pane: "markerPane",
-            });
-            testMarker.addTo(mapRef.current);
-            console.log(
-              `🎯 TEST MARKER added at map center: [${center.lat.toFixed(
-                4
-              )}, ${center.lng.toFixed(4)}]`
-            );
-
-            // Optionally fit bounds to show all markers (commented out to preserve user's view)
-            // mapRef.current.fitBounds(bounds, { padding: [50, 50] });
           }
         } else {
           console.log(`⚠️ No pollution sources to display`);
