@@ -39,6 +39,12 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
   const [isMobile, setIsMobile] = useState(false);
   const [mapInitialized, setMapInitialized] = useState(false);
 
+  // Track map center for dynamic updates when user pans/zooms
+  const [mapCenter, setMapCenter] = useState<[number, number]>([
+    latitude,
+    longitude,
+  ]);
+
   // Detect mobile devices
   useEffect(() => {
     const checkMobile = () => {
@@ -51,16 +57,10 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
 
   // Initialize map
   useEffect(() => {
-    console.log("🗺️ Map initialization effect triggered");
     if (!mapContainerRef.current || mapRef.current) {
-      console.log("🗺️ Skipping map init:", {
-        hasContainer: !!mapContainerRef.current,
-        hasMap: !!mapRef.current,
-      });
       return;
     }
 
-    console.log("🗺️ Creating map...");
     mapRef.current = L.map(mapContainerRef.current).setView(
       [latitude, longitude],
       11
@@ -71,16 +71,25 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     }).addTo(mapRef.current);
 
+    // Add event listener to update map center when user moves the map
+    const handleMoveEnd = () => {
+      if (mapRef.current) {
+        const center = mapRef.current.getCenter();
+        setMapCenter([center.lat, center.lng]);
+      }
+    };
+
+    mapRef.current.on("moveend", handleMoveEnd);
+
     // Mark map as initialized - use setTimeout to ensure state update triggers after map is ready
     mapInitializedRef.current = true;
     setTimeout(() => {
       setMapInitialized(true);
-      console.log("🗺️ Map initialized successfully!");
     }, 100);
 
     return () => {
-      console.log("🗺️ Cleaning up map...");
       if (mapRef.current) {
+        mapRef.current.off("moveend", handleMoveEnd);
         mapRef.current.remove();
         mapRef.current = null;
       }
@@ -124,12 +133,6 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
 
   // Load heatmap data
   useEffect(() => {
-    console.log("🔥 Heatmap effect triggered:", {
-      mapInitialized,
-      hasMap: !!mapRef.current,
-      showHeatmap,
-    });
-
     if (!mapInitialized || !mapRef.current || !showHeatmap) {
       if (heatLayerRef.current && mapRef.current) {
         mapRef.current.removeLayer(heatLayerRef.current);
@@ -147,12 +150,10 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
         // Adjust radius based on device
         const radius = isMobile ? 0.2 : 0.3;
 
-        console.log("🔥 Fetching heatmap data...");
         const response = await fetch(
-          `/api/aqi-grid?latitude=${latitude}&longitude=${longitude}&radius=${radius}`
+          `/api/aqi-grid?latitude=${mapCenter[0]}&longitude=${mapCenter[1]}&radius=${radius}`
         );
         const data = await response.json();
-        console.log("🔥 Heatmap data received:", data.points?.length, "points");
 
         if (data.points && data.points.length > 0 && mapRef.current) {
           // Remove old heatmap
@@ -178,7 +179,6 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
           }).addTo(mapRef.current);
 
           heatLayerRef.current = heatLayer;
-          console.log("🔥 Heatmap layer added to map!");
         }
       } catch (error) {
         console.error("Error loading heatmap:", error);
@@ -188,16 +188,10 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
     };
 
     loadHeatmap();
-  }, [latitude, longitude, showHeatmap, isMobile, mapInitialized]);
+  }, [mapCenter, showHeatmap, isMobile, mapInitialized]);
 
   // Load wind data
   useEffect(() => {
-    console.log("💨 Wind effect triggered:", {
-      mapInitialized,
-      hasMap: !!mapRef.current,
-      showWind,
-    });
-
     if (!mapInitialized || !mapRef.current || !showWind) {
       if (velocityLayerRef.current && mapRef.current) {
         mapRef.current.removeLayer(velocityLayerRef.current);
@@ -209,12 +203,10 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
     const loadWind = async () => {
       try {
         setLoading(true);
-        console.log("💨 Fetching wind data...");
         const response = await fetch(
-          `/api/wind?latitude=${latitude}&longitude=${longitude}`
+          `/api/wind?latitude=${mapCenter[0]}&longitude=${mapCenter[1]}`
         );
         const data = await response.json();
-        console.log("💨 Wind data received:", data.grid?.length, "points");
 
         if (data.grid && data.grid.length > 0 && mapRef.current) {
           // Remove old velocity layer
@@ -229,7 +221,6 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
           const skipFactor = isMobile ? 5 : 3;
           const fontSize = isMobile ? 16 : 20;
 
-          let arrowCount = 0;
           data.grid.forEach((point: any, index: number) => {
             // Only show every Nth point to avoid clutter
             if (index % skipFactor !== 0) return;
@@ -245,13 +236,11 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
               });
 
               L.marker([point.lat, point.lon], { icon }).addTo(windGroup);
-              arrowCount++;
             }
           });
 
           windGroup.addTo(mapRef.current);
           velocityLayerRef.current = windGroup;
-          console.log("💨 Wind layer added to map with", arrowCount, "arrows!");
         }
       } catch (error) {
         console.error("Error loading wind data:", error);
@@ -261,7 +250,7 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
     };
 
     loadWind();
-  }, [latitude, longitude, showWind, isMobile, mapInitialized]);
+  }, [mapCenter, showWind, isMobile, mapInitialized]);
 
   // Load pollution sources
   useEffect(() => {
@@ -277,7 +266,7 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
       try {
         setLoading(true);
         const response = await fetch(
-          `/api/pollution-sources?latitude=${latitude}&longitude=${longitude}&radius=25`
+          `/api/pollution-sources?latitude=${mapCenter[0]}&longitude=${mapCenter[1]}&radius=25`
         );
         const data = await response.json();
 
@@ -335,7 +324,7 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
     };
 
     loadSources();
-  }, [latitude, longitude, showSources, mapInitialized]);
+  }, [mapCenter, showSources, mapInitialized]);
 
   return (
     <div className="glass-dark rounded-3xl p-8 shadow-2xl animate-fadeIn">
@@ -364,15 +353,6 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
             <span className="text-sm font-medium">Loading...</span>
           </div>
         )}
-      </div>
-
-      {/* Debug Panel */}
-      <div className="mb-4 p-3 bg-yellow-500/20 border border-yellow-500/50 rounded-lg">
-        <p className="text-yellow-200 text-sm font-mono">
-          DEBUG: mapInit={mapInitialized ? "✅" : "❌"} | heatmap=
-          {showHeatmap ? "ON" : "OFF"} | wind={showWind ? "ON" : "OFF"} |
-          sources={showSources ? "ON" : "OFF"}
-        </p>
       </div>
 
       {/* Layer Controls */}
