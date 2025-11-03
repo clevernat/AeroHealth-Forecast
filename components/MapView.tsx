@@ -63,8 +63,16 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
   useEffect(() => {
     if (mapRef.current && mapInitializedRef.current) {
       console.log(`📍 Location changed to: [${latitude}, ${longitude}]`);
-      mapRef.current.setView([latitude, longitude], 12);
+
+      // Pan to new location with animation
+      mapRef.current.setView([latitude, longitude], 12, {
+        animate: true,
+        duration: 0.5, // 500ms animation
+      });
+
+      // Update state immediately (don't wait for animation)
       setMapCenter([latitude, longitude]);
+      setMapZoom(12);
     }
   }, [latitude, longitude]);
 
@@ -360,10 +368,10 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
         }
 
         console.log(
-          `🏭 Fetching pollution sources for [${mapCenter[0]}, ${mapCenter[1]}] radius=${searchRadius}km`
+          `🏭 Fetching pollution sources for [${latitude}, ${longitude}] radius=${searchRadius}km`
         );
         const response = await fetch(
-          `/api/pollution-sources?latitude=${mapCenter[0]}&longitude=${mapCenter[1]}&radius=${searchRadius}`
+          `/api/pollution-sources?latitude=${latitude}&longitude=${longitude}&radius=${searchRadius}`
         );
         const data = await response.json();
         console.log(
@@ -447,14 +455,13 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
             `✅ Successfully added ${sourceMarkersRef.current.length} markers to map`
           );
 
-          // Debug: Try to fit all markers in view
-          if (sourceMarkersRef.current.length > 0 && mapRef.current) {
-            const group = L.featureGroup(sourceMarkersRef.current);
-            const bounds = group.getBounds();
+          // Log map center for debugging
+          if (mapRef.current) {
+            const center = mapRef.current.getCenter();
             console.log(
-              `📍 Marker bounds: ${bounds.toBBoxString()}, Map center: [${mapRef.current
-                .getCenter()
-                .lat.toFixed(4)}, ${mapRef.current.getCenter().lng.toFixed(4)}]`
+              `📍 Map center: [${center.lat.toFixed(4)}, ${center.lng.toFixed(
+                4
+              )}], Zoom: ${mapRef.current.getZoom()}`
             );
           }
         } else {
@@ -468,7 +475,14 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
     };
 
     loadSources();
-  }, [mapCenter, mapZoom, showSources, mapInitialized, sourcesOpacity]);
+  }, [
+    latitude,
+    longitude,
+    mapZoom,
+    showSources,
+    mapInitialized,
+    sourcesOpacity,
+  ]);
 
   return (
     <div className="glass-dark rounded-3xl p-8 shadow-2xl animate-fadeIn">
