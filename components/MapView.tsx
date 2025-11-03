@@ -30,13 +30,13 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
   const velocityLayerRef = useRef<any>(null);
   const sourceMarkersRef = useRef<L.Marker[]>([]);
   const currentMarkerRef = useRef<L.CircleMarker | null>(null);
+  const mapInitializedRef = useRef(false);
 
   const [showHeatmap, setShowHeatmap] = useState(true);
   const [showWind, setShowWind] = useState(false);
   const [showSources, setShowSources] = useState(true);
   const [loading, setLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [mapInitialized, setMapInitialized] = useState(false);
 
   // Detect mobile devices
   useEffect(() => {
@@ -63,14 +63,14 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
     }).addTo(mapRef.current);
 
     // Mark map as initialized
-    setMapInitialized(true);
+    mapInitializedRef.current = true;
 
     return () => {
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
       }
-      setMapInitialized(false);
+      mapInitializedRef.current = false;
     };
   }, []);
 
@@ -109,7 +109,7 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
 
   // Load heatmap data
   useEffect(() => {
-    if (!mapInitialized || !mapRef.current || !showHeatmap) {
+    if (!mapInitializedRef.current || !mapRef.current || !showHeatmap) {
       if (heatLayerRef.current && mapRef.current) {
         mapRef.current.removeLayer(heatLayerRef.current);
         heatLayerRef.current = null;
@@ -164,11 +164,11 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
     };
 
     loadHeatmap();
-  }, [latitude, longitude, showHeatmap, isMobile, mapInitialized]);
+  }, [latitude, longitude, showHeatmap, isMobile]);
 
   // Load wind data
   useEffect(() => {
-    if (!mapInitialized || !mapRef.current || !showWind) {
+    if (!mapInitializedRef.current || !mapRef.current || !showWind) {
       if (velocityLayerRef.current && mapRef.current) {
         mapRef.current.removeLayer(velocityLayerRef.current);
         velocityLayerRef.current = null;
@@ -226,11 +226,11 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
     };
 
     loadWind();
-  }, [latitude, longitude, showWind, isMobile, mapInitialized]);
+  }, [latitude, longitude, showWind, isMobile]);
 
   // Load pollution sources
   useEffect(() => {
-    if (!mapInitialized || !mapRef.current || !showSources) {
+    if (!mapInitializedRef.current || !mapRef.current || !showSources) {
       sourceMarkersRef.current.forEach((marker) => marker.remove());
       sourceMarkersRef.current = [];
       return;
@@ -300,7 +300,7 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
     };
 
     loadSources();
-  }, [latitude, longitude, showSources, mapInitialized]);
+  }, [latitude, longitude, showSources]);
 
   return (
     <div className="glass-dark rounded-3xl p-8 shadow-2xl animate-fadeIn">
