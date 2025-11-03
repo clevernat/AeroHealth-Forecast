@@ -7,9 +7,9 @@ interface ActivityRecommendationsProps {
   category: string;
   healthConditions: HealthConditions;
   pollutants?: {
-    pm2_5: number;
-    pm10: number;
-    ozone: number;
+    pm2_5?: number;
+    pm10?: number;
+    ozone?: number;
   };
 }
 
@@ -40,7 +40,10 @@ export default function ActivityRecommendations({
         icon: "🏃",
         status: "safe",
         message: "Great time for jogging, cycling, or outdoor sports!",
-        tips: ["Perfect conditions for all outdoor activities", "Stay hydrated"],
+        tips: [
+          "Perfect conditions for all outdoor activities",
+          "Stay hydrated",
+        ],
       });
     } else if (aqi <= 100) {
       if (hasConditions) {
@@ -112,7 +115,11 @@ export default function ActivityRecommendations({
         icon: "🚶",
         status: "avoid",
         message: "Minimize outdoor exposure",
-        tips: ["Use car or public transit", "Wear N95 mask", "Avoid peak traffic hours"],
+        tips: [
+          "Use car or public transit",
+          "Wear N95 mask",
+          "Avoid peak traffic hours",
+        ],
       });
     }
 
@@ -123,7 +130,10 @@ export default function ActivityRecommendations({
         icon: "🪟",
         status: "safe",
         message: "Open windows for fresh air circulation",
-        tips: ["Great time to air out your home", "Natural ventilation recommended"],
+        tips: [
+          "Great time to air out your home",
+          "Natural ventilation recommended",
+        ],
       });
     } else if (aqi <= 100) {
       recommendations.push({
@@ -131,7 +141,10 @@ export default function ActivityRecommendations({
         icon: "🪟",
         status: "caution",
         message: "Limit window opening time",
-        tips: ["Open windows during cooler hours", "Use air purifier if available"],
+        tips: [
+          "Open windows during cooler hours",
+          "Use air purifier if available",
+        ],
       });
     } else {
       recommendations.push({
@@ -188,7 +201,11 @@ export default function ActivityRecommendations({
           icon: "👶",
           status: "avoid",
           message: "Keep children indoors",
-          tips: ["Indoor activities only", "Close windows", "Use air purifiers"],
+          tips: [
+            "Indoor activities only",
+            "Close windows",
+            "Use air purifiers",
+          ],
         });
       }
     }
@@ -260,7 +277,10 @@ export default function ActivityRecommendations({
             {rec.tips && rec.tips.length > 0 && (
               <ul className="space-y-1 ml-12">
                 {rec.tips.map((tip, i) => (
-                  <li key={i} className="text-white/70 text-sm flex items-start gap-2">
+                  <li
+                    key={i}
+                    className="text-white/70 text-sm flex items-start gap-2"
+                  >
                     <span className="text-white/50">•</span>
                     <span>{tip}</span>
                   </li>
@@ -274,7 +294,8 @@ export default function ActivityRecommendations({
       {pollutants && pollutants.pm2_5 > 35 && (
         <div className="mt-6 p-4 bg-red-500/10 rounded-xl border border-red-400/30">
           <p className="text-red-200 text-sm">
-            <strong>⚠️ High PM2.5 Alert:</strong> Fine particles at {pollutants.pm2_5.toFixed(1)} µg/m³.
+            <strong>⚠️ High PM2.5 Alert:</strong> Fine particles at{" "}
+            {pollutants.pm2_5.toFixed(1)} µg/m³.
             {hasConditions
               ? " Your health conditions make you more vulnerable. Stay indoors and use air purifiers."
               : " Consider wearing N95 masks outdoors and using air purifiers indoors."}
@@ -284,4 +305,3 @@ export default function ActivityRecommendations({
     </div>
   );
 }
-

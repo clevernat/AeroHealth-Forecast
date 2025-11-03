@@ -7,9 +7,9 @@ interface ShareAQIProps {
   category: string;
   location: string;
   pollutants?: {
-    pm2_5: number;
-    pm10: number;
-    ozone: number;
+    pm2_5?: number;
+    pm10?: number;
+    ozone?: number;
   };
 }
 
@@ -46,7 +46,7 @@ export default function ShareAQI({
     return `${emoji} Air Quality in ${location}
 
 AQI: ${aqi} (${category.toUpperCase()})
-${pollutants ? `PM2.5: ${pollutants.pm2_5.toFixed(1)} µg/m³` : ""}
+${pollutants?.pm2_5 ? `PM2.5: ${pollutants.pm2_5.toFixed(1)} µg/m³` : ""}
 
 Check your local air quality at AeroHealth Forecast!
 ${window.location.origin}`;
@@ -154,7 +154,7 @@ ${window.location.origin}`;
     ctx.fillText(location, 400, 450);
 
     // Pollutants
-    if (pollutants) {
+    if (pollutants && pollutants.pm2_5 && pollutants.pm10 && pollutants.ozone) {
       ctx.font = "20px Arial";
       ctx.fillStyle = "#cbd5e1";
       ctx.fillText(
