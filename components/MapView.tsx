@@ -169,26 +169,28 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
           }
 
           // Create heatmap with AQI color gradient
-          // Adjust parameters for mobile - increase visibility
+          // Significantly increased visibility with higher opacity and larger radius
           const heatLayer = L.heatLayer(data.points, {
-            radius: isMobile ? 25 : 40,
-            blur: isMobile ? 20 : 30,
+            radius: isMobile ? 35 : 50, // Increased from 25/40
+            blur: isMobile ? 25 : 35, // Increased from 20/30
             maxZoom: 17,
-            max: 100, // Lowered from 200 to make colors more visible
-            minOpacity: 0.3,
+            max: 80, // Lowered from 100 to make colors even more vibrant
+            minOpacity: 0.6, // Increased from 0.3 for better visibility
             gradient: {
-              0.0: "#00E400", // Good (green)
-              0.2: "#FFFF00", // Moderate (yellow)
-              0.4: "#FF7E00", // Unhealthy for sensitive (orange)
-              0.6: "#FF0000", // Unhealthy (red)
-              0.8: "#8F3F97", // Very unhealthy (purple)
-              1.0: "#7E0023", // Hazardous (maroon)
+              0.0: "#00FF00", // Good (bright green)
+              0.15: "#ADFF2F", // Good-Moderate transition (yellow-green)
+              0.3: "#FFFF00", // Moderate (bright yellow)
+              0.45: "#FFA500", // Moderate-Unhealthy (orange)
+              0.6: "#FF4500", // Unhealthy for sensitive (orange-red)
+              0.75: "#FF0000", // Unhealthy (bright red)
+              0.85: "#8B008B", // Very unhealthy (dark magenta)
+              1.0: "#800000", // Hazardous (dark red/maroon)
             },
           }).addTo(mapRef.current);
 
           heatLayerRef.current = heatLayer;
 
-          // Apply opacity using setTimeout to ensure canvas is rendered
+          // Apply initial opacity using setTimeout to ensure canvas is rendered
           setTimeout(() => {
             const container = mapRef.current?.getContainer();
             if (container) {
@@ -207,7 +209,20 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
     };
 
     loadHeatmap();
-  }, [mapCenter, showHeatmap, isMobile, mapInitialized, heatmapOpacity]);
+  }, [mapCenter, showHeatmap, isMobile, mapInitialized]);
+
+  // Update heatmap opacity without reloading
+  useEffect(() => {
+    if (!heatLayerRef.current || !mapRef.current) return;
+
+    const container = mapRef.current.getContainer();
+    if (container) {
+      const canvas = container.querySelector(".leaflet-heatmap-layer");
+      if (canvas instanceof HTMLElement) {
+        canvas.style.opacity = heatmapOpacity.toString();
+      }
+    }
+  }, [heatmapOpacity]);
 
   // Load wind data
   useEffect(() => {

@@ -89,32 +89,40 @@ export default function Home() {
         // Add timestamp to prevent caching and ensure real-time data
         const timestamp = new Date().getTime();
 
-        // Fetch AQI data with cache-busting
-        const aqiResponse = await fetch(
-          `/api/aqi?latitude=${loc.latitude}&longitude=${loc.longitude}&t=${timestamp}`,
-          {
-            cache: "no-store",
-            headers: {
-              "Cache-Control": "no-cache",
-            },
-          }
-        );
+        // Fetch all data in parallel for faster loading
+        const [aqiResponse, pollenResponse, sourcesResponse] =
+          await Promise.all([
+            fetch(
+              `/api/aqi?latitude=${loc.latitude}&longitude=${loc.longitude}&t=${timestamp}`,
+              {
+                cache: "no-store",
+                headers: {
+                  "Cache-Control": "no-cache",
+                },
+              }
+            ),
+            fetch(
+              `/api/pollen?latitude=${loc.latitude}&longitude=${loc.longitude}&t=${timestamp}`,
+              {
+                cache: "no-store",
+                headers: {
+                  "Cache-Control": "no-cache",
+                },
+              }
+            ),
+            fetch(
+              `/api/pollution-sources?latitude=${loc.latitude}&longitude=${loc.longitude}&radius=50`
+            ).catch(() => null), // Don't fail if pollution sources fail
+          ]);
+
+        // Process AQI data
         if (!aqiResponse.ok) throw new Error("Failed to fetch AQI data");
         const aqiJson = await aqiResponse.json();
         setAqiData(aqiJson.current);
         setHourlyForecast(aqiJson.hourly);
         setDailyForecast(aqiJson.daily);
 
-        // Fetch pollen data with cache-busting
-        const pollenResponse = await fetch(
-          `/api/pollen?latitude=${loc.latitude}&longitude=${loc.longitude}&t=${timestamp}`,
-          {
-            cache: "no-store",
-            headers: {
-              "Cache-Control": "no-cache",
-            },
-          }
-        );
+        // Process pollen data
         if (!pollenResponse.ok) throw new Error("Failed to fetch pollen data");
         const pollenJson = await pollenResponse.json();
         setPollenData(pollenJson.current);
@@ -134,17 +142,10 @@ export default function Home() {
           }))
         );
 
-        // Fetch pollution sources for notifications
-        try {
-          const sourcesResponse = await fetch(
-            `/api/pollution-sources?latitude=${loc.latitude}&longitude=${loc.longitude}&radius=50`
-          );
-          if (sourcesResponse.ok) {
-            const sourcesJson = await sourcesResponse.json();
-            setPollutionSources(sourcesJson.sources || []);
-          }
-        } catch (err) {
-          console.error("Failed to fetch pollution sources:", err);
+        // Process pollution sources
+        if (sourcesResponse && sourcesResponse.ok) {
+          const sourcesJson = await sourcesResponse.json();
+          setPollutionSources(sourcesJson.sources || []);
         }
 
         // Update last updated timestamp
