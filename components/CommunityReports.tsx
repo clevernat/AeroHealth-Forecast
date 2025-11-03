@@ -125,12 +125,16 @@ export default function CommunityReports({
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="glass-dark px-4 py-2 rounded-xl flex items-center gap-2 hover:bg-white/20 transition-all"
+        className="group px-4 sm:px-5 py-2.5 rounded-2xl flex items-center gap-2 transition-all duration-300 bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-600 hover:shadow-2xl hover:shadow-orange-500/50 hover:scale-105 active:scale-95"
       >
-        <span className="text-2xl">👥</span>
-        <span className="text-white font-medium">Community</span>
+        <span className="text-xl sm:text-2xl transition-transform duration-300 group-hover:scale-110">
+          👥
+        </span>
+        <span className="text-white font-bold text-sm hidden sm:inline">
+          Community
+        </span>
         {recentReports.length > 0 && (
-          <span className="bg-orange-500 text-white text-xs px-2 py-1 rounded-full">
+          <span className="bg-white text-orange-600 text-xs px-2.5 py-1 rounded-full font-bold shadow-lg animate-pulse">
             {recentReports.length}
           </span>
         )}
@@ -143,17 +147,37 @@ export default function CommunityReports({
             onClick={() => setIsOpen(false)}
           />
 
-          <div className="absolute top-full right-0 mt-2 w-96 glass-dark rounded-2xl p-6 z-50 animate-fadeIn max-h-[600px] overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-white">
+          <div className="fixed sm:absolute top-20 sm:top-full left-4 right-4 sm:left-auto sm:right-0 mt-2 w-auto sm:w-[28rem] max-w-2xl glass-dark rounded-3xl p-6 sm:p-8 z-50 animate-fadeIn shadow-2xl border border-white/20 max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-bold text-white bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent">
                 Community Reports
               </h3>
-              <button
-                onClick={() => setShowReportForm(!showReportForm)}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-lg text-sm font-medium transition-all"
-              >
-                + Report
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowReportForm(!showReportForm)}
+                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white text-sm font-bold transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg"
+                >
+                  + Report
+                </button>
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="sm:hidden w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all"
+                >
+                  <svg
+                    className="w-5 h-5 text-white"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
             </div>
 
             {showReportForm && (
@@ -288,4 +312,3 @@ export default function CommunityReports({
     </div>
   );
 }
-

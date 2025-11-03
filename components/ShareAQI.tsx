@@ -158,7 +158,11 @@ ${window.location.origin}`;
       ctx.font = "20px Arial";
       ctx.fillStyle = "#cbd5e1";
       ctx.fillText(
-        `PM2.5: ${pollutants.pm2_5.toFixed(1)} µg/m³  |  PM10: ${pollutants.pm10.toFixed(1)} µg/m³  |  O₃: ${pollutants.ozone.toFixed(0)} µg/m³`,
+        `PM2.5: ${pollutants.pm2_5.toFixed(
+          1
+        )} µg/m³  |  PM10: ${pollutants.pm10.toFixed(
+          1
+        )} µg/m³  |  O₃: ${pollutants.ozone.toFixed(0)} µg/m³`,
         400,
         490
       );
@@ -186,10 +190,10 @@ ${window.location.origin}`;
     <div className="relative">
       <button
         onClick={() => setShowShareMenu(!showShareMenu)}
-        className="glass-dark px-4 py-2 rounded-xl flex items-center gap-2 hover:bg-white/20 transition-all"
+        className="group px-4 sm:px-5 py-2.5 rounded-2xl flex items-center gap-2 transition-all duration-300 bg-gradient-to-r from-blue-500 via-cyan-500 to-teal-600 hover:shadow-2xl hover:shadow-blue-500/50 hover:scale-105 active:scale-95"
       >
         <svg
-          className="w-5 h-5 text-white"
+          className="w-5 h-5 text-white transition-transform duration-300 group-hover:rotate-12"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -201,7 +205,9 @@ ${window.location.origin}`;
             d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
           />
         </svg>
-        <span className="text-white font-medium">Share</span>
+        <span className="text-white font-bold text-sm hidden sm:inline">
+          Share
+        </span>
       </button>
 
       {showShareMenu && (
@@ -211,54 +217,88 @@ ${window.location.origin}`;
             onClick={() => setShowShareMenu(false)}
           />
 
-          <div className="absolute top-full right-0 mt-2 w-72 glass-dark rounded-2xl p-4 z-50 animate-fadeIn">
-            <h3 className="text-lg font-bold text-white mb-4">
-              Share Air Quality
-            </h3>
+          <div className="fixed sm:absolute top-20 sm:top-full left-4 right-4 sm:left-auto sm:right-0 mt-2 w-auto sm:w-80 glass-dark rounded-3xl p-6 z-50 animate-fadeIn shadow-2xl border border-white/20">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-white bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+                Share Air Quality
+              </h3>
+              <button
+                onClick={() => setShowShareMenu(false)}
+                className="sm:hidden w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all"
+              >
+                <svg
+                  className="w-5 h-5 text-white"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               {navigator.share && (
                 <button
                   onClick={shareNative}
-                  className="w-full flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all"
+                  className="group w-full flex items-center gap-3 p-4 rounded-2xl bg-white/5 hover:bg-gradient-to-r hover:from-blue-500/20 hover:to-cyan-500/20 transition-all duration-300 hover:scale-[1.02] active:scale-95"
                 >
-                  <span className="text-2xl">📱</span>
-                  <span className="text-white font-medium">Share...</span>
+                  <span className="text-2xl transition-transform duration-300 group-hover:scale-110">
+                    📱
+                  </span>
+                  <span className="text-white font-semibold">Share...</span>
                 </button>
               )}
 
               <button
                 onClick={copyToClipboard}
-                className="w-full flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all"
+                className="group w-full flex items-center gap-3 p-4 rounded-2xl bg-white/5 hover:bg-gradient-to-r hover:from-gray-500/20 hover:to-slate-500/20 transition-all duration-300 hover:scale-[1.02] active:scale-95"
               >
-                <span className="text-2xl">{copied ? "✅" : "📋"}</span>
-                <span className="text-white font-medium">
+                <span className="text-2xl transition-transform duration-300 group-hover:scale-110">
+                  {copied ? "✅" : "📋"}
+                </span>
+                <span className="text-white font-semibold">
                   {copied ? "Copied!" : "Copy to Clipboard"}
                 </span>
               </button>
 
               <button
                 onClick={shareToTwitter}
-                className="w-full flex items-center gap-3 p-3 rounded-xl bg-blue-500/20 hover:bg-blue-500/30 transition-all"
+                className="group w-full flex items-center gap-3 p-4 rounded-2xl bg-blue-500/20 hover:bg-blue-500/30 transition-all duration-300 hover:scale-[1.02] active:scale-95 border border-blue-400/30"
               >
-                <span className="text-2xl">🐦</span>
-                <span className="text-white font-medium">Share on Twitter</span>
+                <span className="text-2xl transition-transform duration-300 group-hover:scale-110">
+                  🐦
+                </span>
+                <span className="text-white font-semibold">
+                  Share on Twitter
+                </span>
               </button>
 
               <button
                 onClick={shareToFacebook}
-                className="w-full flex items-center gap-3 p-3 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 transition-all"
+                className="group w-full flex items-center gap-3 p-4 rounded-2xl bg-blue-600/20 hover:bg-blue-600/30 transition-all duration-300 hover:scale-[1.02] active:scale-95 border border-blue-500/30"
               >
-                <span className="text-2xl">📘</span>
-                <span className="text-white font-medium">Share on Facebook</span>
+                <span className="text-2xl transition-transform duration-300 group-hover:scale-110">
+                  📘
+                </span>
+                <span className="text-white font-semibold">
+                  Share on Facebook
+                </span>
               </button>
 
               <button
                 onClick={downloadImage}
-                className="w-full flex items-center gap-3 p-3 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 transition-all"
+                className="group w-full flex items-center gap-3 p-4 rounded-2xl bg-purple-500/20 hover:bg-purple-500/30 transition-all duration-300 hover:scale-[1.02] active:scale-95 border border-purple-400/30"
               >
-                <span className="text-2xl">🖼️</span>
-                <span className="text-white font-medium">Download Image</span>
+                <span className="text-2xl transition-transform duration-300 group-hover:scale-110">
+                  🖼️
+                </span>
+                <span className="text-white font-semibold">Download Image</span>
               </button>
             </div>
           </div>
@@ -267,4 +307,3 @@ ${window.location.origin}`;
     </div>
   );
 }
-

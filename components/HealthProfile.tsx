@@ -59,12 +59,37 @@ export default function HealthProfile({ onProfileChange }: HealthProfileProps) {
 
   const conditionsList = [
     { key: "asthma" as const, label: "Asthma", icon: "🫁", color: "blue" },
-    { key: "allergies" as const, label: "Allergies", icon: "🤧", color: "purple" },
-    { key: "heartDisease" as const, label: "Heart Disease", icon: "❤️", color: "red" },
+    {
+      key: "allergies" as const,
+      label: "Allergies",
+      icon: "🤧",
+      color: "purple",
+    },
+    {
+      key: "heartDisease" as const,
+      label: "Heart Disease",
+      icon: "❤️",
+      color: "red",
+    },
     { key: "copd" as const, label: "COPD", icon: "🫁", color: "orange" },
-    { key: "pregnancy" as const, label: "Pregnancy", icon: "🤰", color: "pink" },
-    { key: "children" as const, label: "Children in Household", icon: "👶", color: "green" },
-    { key: "elderly" as const, label: "Elderly (65+)", icon: "👴", color: "gray" },
+    {
+      key: "pregnancy" as const,
+      label: "Pregnancy",
+      icon: "🤰",
+      color: "pink",
+    },
+    {
+      key: "children" as const,
+      label: "Children in Household",
+      icon: "👶",
+      color: "green",
+    },
+    {
+      key: "elderly" as const,
+      label: "Elderly (65+)",
+      icon: "👴",
+      color: "gray",
+    },
   ];
 
   return (
@@ -72,14 +97,21 @@ export default function HealthProfile({ onProfileChange }: HealthProfileProps) {
       {/* Profile Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`glass-dark px-4 py-2 rounded-xl flex items-center gap-2 hover:bg-white/20 transition-all ${
-          hasAnyCondition ? "ring-2 ring-blue-400" : ""
+        className={`group relative overflow-hidden px-4 sm:px-5 py-2.5 rounded-2xl flex items-center gap-2 transition-all duration-300 hover:scale-105 active:scale-95 ${
+          hasAnyCondition
+            ? "bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-600 shadow-lg shadow-purple-500/50"
+            : "glass-dark hover:bg-white/20"
         }`}
       >
-        <span className="text-2xl">👤</span>
-        <span className="text-white font-medium">Health Profile</span>
+        <span className="text-xl sm:text-2xl transition-transform duration-300 group-hover:rotate-12">
+          👤
+        </span>
+        <span className="text-white font-bold text-sm hidden sm:inline">
+          Health Profile
+        </span>
+        <span className="text-white font-bold text-sm sm:hidden">Health</span>
         {hasAnyCondition && (
-          <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+          <span className="bg-white text-purple-600 text-xs px-2.5 py-1 rounded-full font-bold shadow-lg animate-pulse">
             {Object.values(conditions).filter((v) => v).length}
           </span>
         )}
@@ -95,40 +127,62 @@ export default function HealthProfile({ onProfileChange }: HealthProfileProps) {
           />
 
           {/* Panel */}
-          <div className="absolute top-full right-0 mt-2 w-96 glass-dark rounded-2xl p-6 z-50 animate-fadeIn">
-            <h3 className="text-xl font-bold text-white mb-4">
-              Personalized Health Profile
-            </h3>
-            <p className="text-white/70 text-sm mb-6">
+          <div className="fixed sm:absolute top-20 sm:top-full left-4 right-4 sm:left-auto sm:right-0 mt-2 w-auto sm:w-96 max-w-md glass-dark rounded-3xl p-6 sm:p-8 z-50 animate-fadeIn shadow-2xl border border-white/20 max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-bold text-white bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
+                Health Profile
+              </h3>
+              <button
+                onClick={() => setIsOpen(false)}
+                className="sm:hidden w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all"
+              >
+                <svg
+                  className="w-5 h-5 text-white"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+            <p className="text-white/70 text-sm mb-6 leading-relaxed">
               Select your health conditions to receive personalized air quality
               recommendations and activity suggestions.
             </p>
 
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {conditionsList.map(({ key, label, icon, color }) => (
                 <button
                   key={key}
                   onClick={() => toggleCondition(key)}
-                  className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${
+                  className={`group w-full flex items-center gap-3 p-4 rounded-2xl transition-all duration-300 hover:scale-[1.02] active:scale-95 ${
                     conditions[key]
-                      ? `bg-${color}-500/20 ring-2 ring-${color}-400`
+                      ? "bg-gradient-to-r from-purple-500/30 to-pink-500/30 ring-2 ring-purple-400 shadow-lg"
                       : "bg-white/5 hover:bg-white/10"
                   }`}
                 >
-                  <span className="text-2xl">{icon}</span>
-                  <span className="text-white font-medium flex-1 text-left">
+                  <span className="text-2xl sm:text-3xl transition-transform duration-300 group-hover:scale-110">
+                    {icon}
+                  </span>
+                  <span className="text-white font-semibold flex-1 text-left text-sm sm:text-base">
                     {label}
                   </span>
                   <div
-                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                    className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
                       conditions[key]
-                        ? `border-${color}-400 bg-${color}-500`
-                        : "border-white/30"
+                        ? "border-purple-400 bg-gradient-to-br from-purple-500 to-pink-500 shadow-lg"
+                        : "border-white/30 group-hover:border-white/50"
                     }`}
                   >
                     {conditions[key] && (
                       <svg
-                        className="w-4 h-4 text-white"
+                        className="w-4 h-4 text-white animate-scaleIn"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -158,4 +212,3 @@ export default function HealthProfile({ onProfileChange }: HealthProfileProps) {
     </div>
   );
 }
-
