@@ -59,25 +59,96 @@ Unlike generic weather apps, AeroHealth Forecast focuses specifically on atmosph
   - 🌾 Grass Pollen
   - 🌿 Weed Pollen (Ragweed, Mugwort)
 
-### 📈 **24-Hour & 5-Day Forecasting**
+### 📈 **Advanced Forecasting System**
 
-- **Hourly Forecast**: Interactive Recharts visualization showing:
-  - AQI trends for the next 24 hours
-  - Pollen levels (Tree, Grass, Weed) with color-coded lines
+- **24-Hour Forecast**: Interactive Recharts visualization with:
+
+  - **Dual View Modes**: Toggle between "Overview" and "By Pollutant"
+  - **Overview Mode**: Combined AQI and pollen trends
+  - **By Pollutant Mode**: Individual charts for each pollutant (PM2.5, PM10, O₃, NO₂, SO₂, CO)
+  - Peak time identification for each pollutant
+  - Color-coded gradient area charts
   - Custom tooltips with detailed information
-- **5-Day Forecast**: Daily cards displaying:
-  - Peak AQI values
-  - Average AQI
-  - All pollen types with color-coded badges
-  - Easy-to-scan visual layout
 
-### 🗺️ **Interactive Map View**
+- **6-7 Day Extended Forecast**: Comprehensive daily outlook with:
+
+  - Peak AQI and average AQI values
+  - Peak pollen levels for all allergen types
+  - **Trend Analysis**: Improving/Worsening/Stable indicators
+  - Week average, peak AQI, and best AQI metrics
+  - Visual trend indicators with percentage changes
+  - Color-coded badges for quick scanning
+
+- **Historical Data Comparison**: Compare today's air quality with:
+  - Last week's data
+  - 2 weeks ago
+  - 1 month ago
+  - Percentage change indicators (↑ worse / ↓ better)
+  - Smart trend insights with actionable recommendations
+
+### 🗺️ **Advanced Interactive Map**
 
 - **Leaflet Integration**: Professional mapping with OpenStreetMap
+- **Location Search**: Search any city or address worldwide
 - **Color-Coded Markers**: Location marker changes color based on current AQI
-- **Interactive Popup**: Click marker for detailed location information
+- **Pollution Source Mapping**: Visualize nearby pollution sources:
+  - 🏭 Industrial facilities (red markers)
+  - 🛣️ Major highways and motorways (orange markers)
+  - 🔥 Active wildfires from NASA FIRMS (fire markers)
+  - Distance indicators for each source
+  - Severity ratings (high/medium/low)
+- **Interactive Popups**: Click markers for detailed information
 - **AQI Legend**: Visual guide showing all AQI categories
+- **Wind Overlay**: Real-time wind direction and speed visualization
 - **Responsive Design**: Works seamlessly on mobile and desktop
+
+### 🏥 **Health & Personalized Recommendations**
+
+- **Health Profile System**:
+
+  - Create personalized health profiles
+  - Track conditions: Asthma, Allergies, Heart Disease, COPD, Pregnancy, Children, Elderly
+  - Privacy-first: All data stored locally in browser
+  - Visual indicators for active conditions
+
+- **AI-Powered Activity Recommendations**:
+  - Personalized advice based on AQI and health profile
+  - Activity-specific guidance:
+    - 🏃 Outdoor exercise (jogging, cycling, sports)
+    - 🚶 Walking and commuting
+    - 🪟 Windows and ventilation
+    - 💨 Air purifier usage and settings
+    - 👶 Children's outdoor play
+  - Color-coded status: Safe ✅ / Caution ⚠️ / Avoid 🚫
+  - Detailed tips for each activity
+  - Special alerts for high PM2.5 levels
+
+### 📱 **Social & Sharing Features**
+
+- **Share Air Quality Reports**:
+
+  - Copy to clipboard
+  - Native share API (mobile)
+  - Share to Twitter
+  - Share to Facebook
+  - Download as image with AQI visualization
+  - Shareable URLs with embedded AQI data
+
+- **Community Reports System**:
+
+  - Report local observations: Smoke 🔥, Dust 💨, Odor 👃, Pollen 🌸
+  - Upvote system for community validation
+  - Location-based filtering (within ~50km)
+  - Time-based filtering (last 24 hours)
+  - Real-time community insights
+
+- **Public Health Dashboard**:
+  - City-wide statistics for health officials
+  - Population at risk estimates
+  - AQI trend charts (7-day forecast)
+  - Air quality distribution analytics
+  - Public health recommendations
+  - Actionable advice for officials
 
 ### 🎓 **Educational Component**
 
@@ -184,14 +255,28 @@ Unlike generic weather apps, AeroHealth Forecast focuses specifically on atmosph
 ### Data Sources
 
 - **[Open-Meteo Air Quality API](https://open-meteo.com/en/docs/air-quality-api)**
+
   - ✅ **100% Free** - No API key required
   - ✅ **Open Source** - Transparent data sources
   - ✅ **High Accuracy** - Combines multiple data sources
   - ✅ **Global Coverage** - Works worldwide
   - ✅ **Real-Time Updates** - Hourly data updates
-  - ✅ **5-Day Forecasts** - Predictive capabilities
+  - ✅ **6-7 Day Forecasts** - Extended predictive capabilities
   - ✅ **EPA Standards** - US AQI calculations
   - ✅ **Pollen Data** - Multiple allergen types
+
+- **[NASA FIRMS](https://firms.modaps.eosdis.nasa.gov/)** (Fire Information for Resource Management System)
+
+  - ✅ **Real-time wildfire data** - Active fire detection
+  - ✅ **VIIRS satellite data** - High-resolution fire monitoring
+  - ✅ **Global coverage** - Worldwide fire tracking
+  - ✅ **Free API access** - NASA public data
+
+- **[OpenStreetMap Overpass API](https://overpass-api.de/)**
+  - ✅ **Pollution source mapping** - Industrial facilities and highways
+  - ✅ **Real-time data** - Up-to-date infrastructure information
+  - ✅ **Global coverage** - Worldwide mapping data
+  - ✅ **Free and open** - Community-driven data
 
 ### Deployment & Hosting
 
@@ -295,13 +380,25 @@ Real-Time Data (updated hourly)
    npm install
    ```
 
-3. **Run the development server**
+3. **Set up environment variables** (Optional - for NASA FIRMS wildfire data)
+
+   Create a `.env.local` file:
+
+   ```bash
+   NASA_FIRMS_API_KEY=your_api_key_here
+   ```
+
+   Get your free API key from [NASA FIRMS](https://firms.modaps.eosdis.nasa.gov/api/area/)
+
+   > **Note**: The app works without this key, but wildfire markers won't appear on the map.
+
+4. **Run the development server**
 
    ```bash
    npm run dev
    ```
 
-4. **Open your browser**
+5. **Open your browser**
    Navigate to [http://localhost:3000](http://localhost:3000)
 
 ### Building for Production
@@ -318,7 +415,10 @@ npm start
 1. Push your code to GitHub
 2. Import your repository in [Vercel](https://vercel.com)
 3. Vercel will automatically detect Next.js and configure the build settings
-4. Deploy!
+4. **(Optional)** Add environment variable in Vercel dashboard:
+   - Key: `NASA_FIRMS_API_KEY`
+   - Value: Your NASA FIRMS API key
+5. Deploy!
 
 Alternatively, use the Vercel CLI:
 
@@ -326,6 +426,8 @@ Alternatively, use the Vercel CLI:
 npm install -g vercel
 vercel
 ```
+
+> **Note**: The NASA FIRMS API key is optional. The app will work without it, but wildfire data won't be displayed on the map.
 
 ---
 
@@ -346,7 +448,7 @@ vercel
 
 ### Navigation
 
-**Four Main Views**:
+**Six Main Views**:
 
 1. **📊 Dashboard** (Default)
 
@@ -358,23 +460,45 @@ vercel
 
 2. **⏰ 24-Hour Forecast**
 
+   - Toggle between "Overview" and "By Pollutant" views
    - Interactive AQI trend chart
+   - Individual pollutant charts (PM2.5, PM10, O₃, NO₂, SO₂, CO)
    - Pollen forecast chart (3 lines)
    - Hover over chart for detailed values
    - Plan your next 24 hours
 
-3. **📅 5-Day Forecast**
+3. **📅 6-7 Day Forecast**
 
-   - Daily forecast cards
+   - Extended daily forecast cards
    - Peak and average AQI
+   - Trend analysis (improving/worsening/stable)
+   - Week average, peak, and best AQI metrics
    - All pollen types with badges
+   - Historical comparison (last week, 2 weeks, 1 month)
    - Week-ahead planning
 
 4. **🗺️ Map View**
+
+   - Search any location worldwide
    - Your location on OpenStreetMap
    - Color-coded AQI marker
-   - Interactive popup with details
+   - Pollution source markers (factories, highways, wildfires)
+   - Wind direction overlay
+   - Interactive popups with details
    - AQI legend for reference
+
+5. **🏥 Health** (New!)
+
+   - Create personalized health profile
+   - Get activity recommendations based on AQI
+   - Air purifier usage suggestions
+   - Personalized health alerts
+
+6. **📊 Public Health** (New!)
+   - City-wide statistics dashboard
+   - Population at risk estimates
+   - AQI trend analytics
+   - Public health recommendations
 
 ### Real-Time Features
 
@@ -481,12 +605,17 @@ AeroHealth-Forecast/
 │   ├── layout.tsx                # Root layout with Inter font
 │   └── page.tsx                  # Main app with real-time refresh logic
 ├── components/
-│   ├── AQICard.tsx               # Current AQI display with pollutant grid
-│   ├── PollenCard.tsx            # Current pollen levels display
-│   ├── HourlyForecast.tsx        # 24-hour forecast charts
-│   ├── DailyForecast.tsx         # 5-day forecast cards
-│   ├── MapView.tsx               # Leaflet map integration
-│   └── InfoModal.tsx             # Educational content modals
+│   ├── AQICard.tsx                      # Current AQI display with pollutant grid
+│   ├── PollenCard.tsx                   # Current pollen levels display
+│   ├── HourlyForecast.tsx               # 24-hour forecast charts (dual view modes)
+│   ├── DailyForecast.tsx                # 6-7 day forecast cards with trends
+│   ├── MapView.tsx                      # Leaflet map with pollution sources
+│   ├── InfoModal.tsx                    # Educational content modals
+│   ├── HealthProfile.tsx                # Health condition management
+│   ├── ActivityRecommendations.tsx      # Personalized activity advice
+│   ├── ShareAQI.tsx                     # Social sharing functionality
+│   ├── CommunityReports.tsx             # User-generated reports
+│   └── PublicHealthDashboard.tsx        # Statistics and analytics
 ├── lib/
 │   ├── constants.ts              # AQI/pollen categories, pollutant info
 │   └── utils.ts                  # AQI calculations, helper functions
@@ -564,18 +693,25 @@ A: Yes! It's MIT licensed - free for commercial use.
 
 ### Planned Features
 
-- 🔍 **Location Search**: Search by city name or ZIP code
 - 🔔 **Push Notifications**: Alerts for poor air quality
-- 📈 **Historical Trends**: View past AQI and pollen data
-- 👤 **Personalized Recommendations**: Based on health conditions
 - 🌐 **Multi-Language Support**: Spanish, Chinese, and more
 - 📱 **Mobile Apps**: Native iOS and Android versions
 - ⌚ **Wearable Integration**: Apple Watch, Fitbit support
-- 👥 **Community Features**: User-reported air quality
 - 🗺️ **Heatmaps**: Regional air quality visualization
 - 📊 **Data Export**: Download your local air quality history
 - 🤖 **AI Predictions**: Machine learning for better forecasts
 - 🏥 **Health Integration**: Connect with health apps
+
+### Recently Completed ✅
+
+- ✅ **Location Search**: Search by city name or ZIP code
+- ✅ **Historical Trends**: View past AQI and pollen data with comparisons
+- ✅ **Personalized Recommendations**: Based on health conditions
+- ✅ **Community Features**: User-reported air quality observations
+- ✅ **Pollution Source Mapping**: Industrial facilities, highways, wildfires
+- ✅ **Extended Forecasts**: 6-7 day forecasts with trend analysis
+- ✅ **Social Sharing**: Share air quality reports on social media
+- ✅ **Public Health Dashboard**: Statistics for health officials
 
 ### Contributing Ideas
 
@@ -599,4 +735,47 @@ _AeroHealth Forecast - Breathe Easier, Live Healthier_
 
 **Live Demo**: Deploy your own in minutes with Vercel!
 
-**Version**: 1.0.0 (Production Ready)
+**Version**: 2.0.0 (Production Ready)
+
+---
+
+## 🆕 What's New in v2.0
+
+### Major Features Added
+
+1. **🗺️ Advanced Map Features**
+
+   - Location search with geocoding
+   - Pollution source mapping (factories, highways, wildfires)
+   - NASA FIRMS wildfire integration
+   - Wind direction overlay
+   - Interactive pollution source markers
+
+2. **📈 Enhanced Forecasting**
+
+   - Extended to 6-7 day forecasts
+   - Dual-view 24-hour forecast (Overview + By Pollutant)
+   - Individual pollutant trend charts
+   - Historical data comparison (1 week, 2 weeks, 1 month)
+   - Trend analysis with percentage changes
+
+3. **🏥 Health & Recommendations**
+
+   - Personalized health profiles
+   - AI-powered activity recommendations
+   - Air purifier usage suggestions
+   - Condition-specific health alerts
+
+4. **📱 Social & Community**
+
+   - Share air quality reports (Twitter, Facebook, clipboard, image)
+   - Community observation reports
+   - Upvote system for community validation
+   - Public health dashboard for officials
+
+5. **🎨 UI/UX Improvements**
+   - Sleek, modern, mobile-responsive design
+   - Gradient buttons with hover animations
+   - Full-screen modals on mobile
+   - Enhanced glassmorphism effects
+   - Better touch targets for mobile users
