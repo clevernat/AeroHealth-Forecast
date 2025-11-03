@@ -33,11 +33,14 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
   const mapInitializedRef = useRef(false);
 
   const [showHeatmap, setShowHeatmap] = useState(true);
-  const [showWind, setShowWind] = useState(false);
+  const [showWind, setShowWind] = useState(true);
   const [showSources, setShowSources] = useState(true);
   const [loading, setLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [mapInitialized, setMapInitialized] = useState(false);
+  const [heatmapOpacity, setHeatmapOpacity] = useState(0.7);
+  const [windOpacity, setWindOpacity] = useState(1);
+  const [sourcesOpacity, setSourcesOpacity] = useState(1);
 
   // Track map center for dynamic updates when user pans/zooms
   const [mapCenter, setMapCenter] = useState<[number, number]>([
@@ -61,14 +64,18 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
       return;
     }
 
-    mapRef.current = L.map(mapContainerRef.current).setView(
-      [latitude, longitude],
-      11
-    );
+    mapRef.current = L.map(mapContainerRef.current, {
+      zoomControl: true, // Enable zoom controls
+      zoomControlOptions: {
+        position: "topright" as L.ControlPosition,
+      },
+    }).setView([latitude, longitude], 12);
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution:
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 18,
+      minZoom: 3,
     }).addTo(mapRef.current);
 
     // Add event listener to update map center when user moves the map
@@ -162,12 +169,13 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
           }
 
           // Create heatmap with AQI color gradient
-          // Adjust parameters for mobile
+          // Adjust parameters for mobile - increase visibility
           const heatLayer = L.heatLayer(data.points, {
-            radius: isMobile ? 20 : 30,
-            blur: isMobile ? 15 : 25,
+            radius: isMobile ? 25 : 40,
+            blur: isMobile ? 20 : 30,
             maxZoom: 17,
-            max: 200,
+            max: 100, // Lowered from 200 to make colors more visible
+            minOpacity: 0.3,
             gradient: {
               0.0: "#00E400", // Good (green)
               0.2: "#FFFF00", // Moderate (yellow)
@@ -179,6 +187,12 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
           }).addTo(mapRef.current);
 
           heatLayerRef.current = heatLayer;
+
+          // Apply opacity
+          const canvas = heatLayer.getElement();
+          if (canvas) {
+            canvas.style.opacity = heatmapOpacity.toString();
+          }
         }
       } catch (error) {
         console.error("Error loading heatmap:", error);
@@ -188,7 +202,7 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
     };
 
     loadHeatmap();
-  }, [mapCenter, showHeatmap, isMobile, mapInitialized]);
+  }, [mapCenter, showHeatmap, isMobile, mapInitialized, heatmapOpacity]);
 
   // Load wind data
   useEffect(() => {
@@ -219,7 +233,7 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
 
           // Reduce particle count on mobile
           const skipFactor = isMobile ? 5 : 3;
-          const fontSize = isMobile ? 16 : 20;
+          const fontSize = isMobile ? 20 : 24;
 
           data.grid.forEach((point: any, index: number) => {
             // Only show every Nth point to avoid clutter
@@ -231,7 +245,7 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
             if (speed > 0.5) {
               const icon = L.divIcon({
                 className: "wind-arrow",
-                html: `<div style="transform: rotate(${angle}deg); font-size: ${fontSize}px;">➤</div>`,
+                html: `<div class="wind-arrow-icon" style="transform: rotate(${angle}deg); font-size: ${fontSize}px; color: #3B82F6; text-shadow: 0 0 3px white; opacity: ${windOpacity};">➤</div>`,
                 iconSize: [fontSize, fontSize],
               });
 
@@ -250,7 +264,7 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
     };
 
     loadWind();
-  }, [mapCenter, showWind, isMobile, mapInitialized]);
+  }, [mapCenter, showWind, isMobile, mapInitialized, windOpacity]);
 
   // Load pollution sources
   useEffect(() => {
@@ -276,7 +290,11 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
 
         if (data.sources && data.sources.length > 0 && mapRef.current) {
           data.sources.forEach((source: PollutionSource) => {
-            const icon = getSourceIcon(source.type, source.severity);
+            const icon = getSourceIcon(
+              source.type,
+              source.severity,
+              sourcesOpacity
+            );
             const marker = L.marker([source.latitude, source.longitude], {
               icon: L.divIcon({
                 className: "pollution-source-marker",
@@ -324,7 +342,7 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
     };
 
     loadSources();
-  }, [mapCenter, showSources, mapInitialized]);
+  }, [mapCenter, showSources, mapInitialized, sourcesOpacity]);
 
   return (
     <div className="glass-dark rounded-3xl p-8 shadow-2xl animate-fadeIn">
@@ -387,6 +405,76 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
         >
           🏭 {showSources ? "Hide" : "Show"} Sources
         </button>
+        <button
+          onClick={() => {
+            if (mapRef.current) {
+              mapRef.current.setView([latitude, longitude], 12);
+              setMapCenter([latitude, longitude]);
+            }
+          }}
+          className="px-4 py-2 rounded-lg font-medium transition-all bg-white/10 text-white/70 hover:bg-white/20"
+        >
+          🎯 Reset View
+        </button>
+      </div>
+
+      {/* Opacity Controls */}
+      <div className="mb-4 p-4 bg-white/5 rounded-lg border border-white/10">
+        <h3 className="text-white font-medium mb-3 text-sm">
+          Layer Opacity Controls
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Heatmap Opacity */}
+          <div>
+            <label className="text-white/70 text-xs mb-1 block">
+              🗺️ Heatmap: {Math.round(heatmapOpacity * 100)}%
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.1"
+              value={heatmapOpacity}
+              onChange={(e) => setHeatmapOpacity(parseFloat(e.target.value))}
+              className="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer slider"
+              disabled={!showHeatmap}
+            />
+          </div>
+
+          {/* Wind Opacity */}
+          <div>
+            <label className="text-white/70 text-xs mb-1 block">
+              🌬️ Wind: {Math.round(windOpacity * 100)}%
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.1"
+              value={windOpacity}
+              onChange={(e) => setWindOpacity(parseFloat(e.target.value))}
+              className="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer slider"
+              disabled={!showWind}
+            />
+          </div>
+
+          {/* Sources Opacity */}
+          <div>
+            <label className="text-white/70 text-xs mb-1 block">
+              🏭 Sources: {Math.round(sourcesOpacity * 100)}%
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.1"
+              value={sourcesOpacity}
+              onChange={(e) => setSourcesOpacity(parseFloat(e.target.value))}
+              className="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer slider"
+              disabled={!showSources}
+            />
+          </div>
+        </div>
       </div>
 
       <div
@@ -498,16 +586,48 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
             </div>
           </div>
         )}
+
+        {/* Wind Speed Legend */}
+        {showWind && (
+          <div className="mt-4">
+            <h3 className="text-white font-semibold text-sm mb-2">
+              Wind Speed & Direction
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <div className="flex items-center gap-2 p-2 bg-white/5 rounded-lg">
+                <span className="text-xl text-blue-400">➤</span>
+                <span className="text-white font-medium text-sm">
+                  Arrow shows wind direction
+                </span>
+              </div>
+              <div className="flex items-center gap-2 p-2 bg-white/5 rounded-lg">
+                <span className="text-white/70 text-xs">
+                  More arrows = Higher wind speed
+                </span>
+              </div>
+            </div>
+            <div className="mt-2 p-2 bg-white/5 rounded-lg">
+              <p className="text-white/60 text-xs">
+                💡 Tip: Wind arrows are animated and point in the direction the
+                wind is blowing
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
 // Helper functions
-function getSourceIcon(type: string, severity?: string): string {
+function getSourceIcon(
+  type: string,
+  severity?: string,
+  opacity: number = 1
+): string {
   const emoji = getSourceEmoji(type);
   const color = severity ? getSeverityColor(severity) : "#666";
-  return `<div style="font-size: 24px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); background: ${color}; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">${emoji}</div>`;
+  return `<div style="font-size: 24px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); background: ${color}; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; opacity: ${opacity};">${emoji}</div>`;
 }
 
 function getSourceEmoji(type: string): string {
