@@ -385,15 +385,27 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
               icon: L.divIcon({
                 className: "pollution-source-marker",
                 html: icon,
-                iconSize: [40, 40], // Increased size for better visibility
-                iconAnchor: [20, 20], // Center the larger icon
+                iconSize: [50, 50], // Even larger for maximum visibility
+                iconAnchor: [25, 25], // Center the icon
               }),
               zIndexOffset: 10000, // Much higher z-index to ensure visibility
               pane: "markerPane", // Explicitly use marker pane (highest layer)
+              interactive: true, // Ensure markers are interactive
+              bubblingMouseEvents: false, // Prevent event bubbling
             });
 
             if (mapRef.current) {
               marker.addTo(mapRef.current);
+
+              // Debug: Check if marker is within map bounds
+              const bounds = mapRef.current.getBounds();
+              const markerLatLng = marker.getLatLng();
+              const isInBounds = bounds.contains(markerLatLng);
+              console.log(
+                `  Marker ${
+                  index + 1
+                } in bounds: ${isInBounds} (bounds: ${bounds.toBBoxString()})`
+              );
             }
 
             marker.bindPopup(`
@@ -425,6 +437,53 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
           console.log(
             `✅ Successfully added ${sourceMarkersRef.current.length} markers to map`
           );
+
+          // Debug: Try to fit all markers in view
+          if (sourceMarkersRef.current.length > 0 && mapRef.current) {
+            const group = L.featureGroup(sourceMarkersRef.current);
+            const bounds = group.getBounds();
+            console.log(
+              `📍 Marker bounds: ${bounds.toBBoxString()}, Map center: [${mapRef.current
+                .getCenter()
+                .lat.toFixed(4)}, ${mapRef.current.getCenter().lng.toFixed(4)}]`
+            );
+
+            // DEBUG: Add a test marker at the exact map center to verify rendering works
+            const center = mapRef.current.getCenter();
+            const testMarker = L.marker([center.lat, center.lng], {
+              icon: L.divIcon({
+                className: "pollution-source-marker test-marker",
+                html: `<div style="
+                  font-size: 32px;
+                  background: #FF0000;
+                  border-radius: 50%;
+                  width: 50px;
+                  height: 50px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  border: 4px solid #FFFFFF;
+                  box-shadow: 0 0 20px rgba(0,0,0,0.8), 0 0 40px #FF0000;
+                  position: relative;
+                  z-index: 10000;
+                  cursor: pointer;
+                ">🎯</div>`,
+                iconSize: [50, 50],
+                iconAnchor: [25, 25],
+              }),
+              zIndexOffset: 10000,
+              pane: "markerPane",
+            });
+            testMarker.addTo(mapRef.current);
+            console.log(
+              `🎯 TEST MARKER added at map center: [${center.lat.toFixed(
+                4
+              )}, ${center.lng.toFixed(4)}]`
+            );
+
+            // Optionally fit bounds to show all markers (commented out to preserve user's view)
+            // mapRef.current.fitBounds(bounds, { padding: [50, 50] });
+          }
         } else {
           console.log(`⚠️ No pollution sources to display`);
         }
@@ -736,7 +795,23 @@ function getSourceIcon(
 ): string {
   const emoji = getSourceEmoji(type);
   const color = severity ? getSeverityColor(severity) : "#666";
-  return `<div style="font-size: 28px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5)); background: ${color}; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; opacity: ${opacity}; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.3);">${emoji}</div>`;
+  // Use a very bright, high-contrast design with explicit positioning
+  return `<div style="
+    font-size: 32px;
+    background: ${color};
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: ${opacity};
+    border: 4px solid #FFFFFF;
+    box-shadow: 0 0 20px rgba(0,0,0,0.8), 0 0 40px ${color};
+    position: relative;
+    z-index: 10000;
+    cursor: pointer;
+  ">${emoji}</div>`;
 }
 
 function getSourceEmoji(type: string): string {
