@@ -188,11 +188,16 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
 
           heatLayerRef.current = heatLayer;
 
-          // Apply opacity
-          const canvas = heatLayer.getElement();
-          if (canvas) {
-            canvas.style.opacity = heatmapOpacity.toString();
-          }
+          // Apply opacity using setTimeout to ensure canvas is rendered
+          setTimeout(() => {
+            const container = mapRef.current?.getContainer();
+            if (container) {
+              const canvas = container.querySelector(".leaflet-heatmap-layer");
+              if (canvas instanceof HTMLElement) {
+                canvas.style.opacity = heatmapOpacity.toString();
+              }
+            }
+          }, 100);
         }
       } catch (error) {
         console.error("Error loading heatmap:", error);
@@ -436,7 +441,7 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
               step="0.1"
               value={heatmapOpacity}
               onChange={(e) => setHeatmapOpacity(parseFloat(e.target.value))}
-              className="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer slider"
+              className="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer slider slider-heatmap"
               disabled={!showHeatmap}
             />
           </div>
@@ -453,7 +458,7 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
               step="0.1"
               value={windOpacity}
               onChange={(e) => setWindOpacity(parseFloat(e.target.value))}
-              className="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer slider"
+              className="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer slider slider-wind"
               disabled={!showWind}
             />
           </div>
@@ -470,7 +475,7 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
               step="0.1"
               value={sourcesOpacity}
               onChange={(e) => setSourcesOpacity(parseFloat(e.target.value))}
-              className="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer slider"
+              className="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer slider slider-sources"
               disabled={!showSources}
             />
           </div>

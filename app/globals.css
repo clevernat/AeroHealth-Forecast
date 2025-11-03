@@ -124,6 +124,35 @@ input[type="range"].slider:disabled::-moz-range-thumb {
   background: rgba(255, 255, 255, 0.3);
 }
 
+/* Distinct colors for each slider type */
+
+/* Heatmap slider - Red/Orange gradient (matches heatmap colors) */
+input[type="range"].slider-heatmap::-webkit-slider-thumb {
+  background: linear-gradient(135deg, #ff7e00 0%, #ff0000 100%);
+}
+
+input[type="range"].slider-heatmap::-moz-range-thumb {
+  background: linear-gradient(135deg, #ff7e00 0%, #ff0000 100%);
+}
+
+/* Wind slider - Blue gradient (matches wind arrows) */
+input[type="range"].slider-wind::-webkit-slider-thumb {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+}
+
+input[type="range"].slider-wind::-moz-range-thumb {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+}
+
+/* Sources slider - Green/Teal gradient (matches pollution sources) */
+input[type="range"].slider-sources::-webkit-slider-thumb {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+input[type="range"].slider-sources::-moz-range-thumb {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
 /* Loading spinner animation */
 @keyframes spin {
   to {
