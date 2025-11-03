@@ -225,6 +225,7 @@ export default function Home() {
     name: string
   ) => {
     const newLocation = { latitude, longitude };
+    console.log(`📍 Location selected: ${name} [${latitude}, ${longitude}]`);
     setLocation(newLocation);
     setLocationName(name);
     // Fetch data in background without showing loading screen

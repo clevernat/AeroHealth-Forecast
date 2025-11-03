@@ -144,6 +144,11 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
 
     // CRITICAL FIX: Update mapCenter state to match new location
     // This ensures all layers (heatmap, wind, sources) fetch data for the new location
+    console.log(
+      `🗺️ MapView: Location changed to [${latitude.toFixed(
+        4
+      )}, ${longitude.toFixed(4)}]`
+    );
     setMapCenter([latitude, longitude]);
   }, [latitude, longitude, aqi]);
 
@@ -176,10 +181,16 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
           radius = isMobile ? 0.6 : 0.8; // Very zoomed out - very large area
         }
 
+        console.log(
+          `🔥 Fetching heatmap for [${mapCenter[0]}, ${mapCenter[1]}] radius=${radius}`
+        );
         const response = await fetch(
           `/api/aqi-grid?latitude=${mapCenter[0]}&longitude=${mapCenter[1]}&radius=${radius}`
         );
         const data = await response.json();
+        console.log(
+          `✅ Heatmap data received: ${data.points?.length || 0} points`
+        );
 
         if (data.points && data.points.length > 0 && mapRef.current) {
           // Remove old heatmap
@@ -339,10 +350,16 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
           searchRadius = 100; // Very zoomed out - 100km radius
         }
 
+        console.log(
+          `🏭 Fetching pollution sources for [${mapCenter[0]}, ${mapCenter[1]}] radius=${searchRadius}km`
+        );
         const response = await fetch(
           `/api/pollution-sources?latitude=${mapCenter[0]}&longitude=${mapCenter[1]}&radius=${searchRadius}`
         );
         const data = await response.json();
+        console.log(
+          `✅ Pollution sources received: ${data.sources?.length || 0} sources`
+        );
 
         // Remove old markers
         sourceMarkersRef.current.forEach((marker) => marker.remove());
