@@ -37,6 +37,7 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
   const [showSources, setShowSources] = useState(true);
   const [loading, setLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [mapInitialized, setMapInitialized] = useState(false);
 
   // Detect mobile devices
   useEffect(() => {
@@ -50,8 +51,16 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
 
   // Initialize map
   useEffect(() => {
-    if (!mapContainerRef.current || mapRef.current) return;
+    console.log("🗺️ Map initialization effect triggered");
+    if (!mapContainerRef.current || mapRef.current) {
+      console.log("🗺️ Skipping map init:", {
+        hasContainer: !!mapContainerRef.current,
+        hasMap: !!mapRef.current,
+      });
+      return;
+    }
 
+    console.log("🗺️ Creating map...");
     mapRef.current = L.map(mapContainerRef.current).setView(
       [latitude, longitude],
       11
@@ -62,15 +71,21 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     }).addTo(mapRef.current);
 
-    // Mark map as initialized
+    // Mark map as initialized - use setTimeout to ensure state update triggers after map is ready
     mapInitializedRef.current = true;
+    setTimeout(() => {
+      setMapInitialized(true);
+      console.log("🗺️ Map initialized successfully!");
+    }, 100);
 
     return () => {
+      console.log("🗺️ Cleaning up map...");
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
       }
       mapInitializedRef.current = false;
+      setMapInitialized(false);
     };
   }, []);
 
@@ -109,7 +124,13 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
 
   // Load heatmap data
   useEffect(() => {
-    if (!mapInitializedRef.current || !mapRef.current || !showHeatmap) {
+    console.log("🔥 Heatmap effect triggered:", {
+      mapInitialized,
+      hasMap: !!mapRef.current,
+      showHeatmap,
+    });
+
+    if (!mapInitialized || !mapRef.current || !showHeatmap) {
       if (heatLayerRef.current && mapRef.current) {
         mapRef.current.removeLayer(heatLayerRef.current);
         heatLayerRef.current = null;
@@ -126,10 +147,12 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
         // Adjust radius based on device
         const radius = isMobile ? 0.2 : 0.3;
 
+        console.log("🔥 Fetching heatmap data...");
         const response = await fetch(
           `/api/aqi-grid?latitude=${latitude}&longitude=${longitude}&radius=${radius}`
         );
         const data = await response.json();
+        console.log("🔥 Heatmap data received:", data.points?.length, "points");
 
         if (data.points && data.points.length > 0 && mapRef.current) {
           // Remove old heatmap
@@ -155,6 +178,7 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
           }).addTo(mapRef.current);
 
           heatLayerRef.current = heatLayer;
+          console.log("🔥 Heatmap layer added to map!");
         }
       } catch (error) {
         console.error("Error loading heatmap:", error);
@@ -164,11 +188,17 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
     };
 
     loadHeatmap();
-  }, [latitude, longitude, showHeatmap, isMobile]);
+  }, [latitude, longitude, showHeatmap, isMobile, mapInitialized]);
 
   // Load wind data
   useEffect(() => {
-    if (!mapInitializedRef.current || !mapRef.current || !showWind) {
+    console.log("💨 Wind effect triggered:", {
+      mapInitialized,
+      hasMap: !!mapRef.current,
+      showWind,
+    });
+
+    if (!mapInitialized || !mapRef.current || !showWind) {
       if (velocityLayerRef.current && mapRef.current) {
         mapRef.current.removeLayer(velocityLayerRef.current);
         velocityLayerRef.current = null;
@@ -179,10 +209,12 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
     const loadWind = async () => {
       try {
         setLoading(true);
+        console.log("💨 Fetching wind data...");
         const response = await fetch(
           `/api/wind?latitude=${latitude}&longitude=${longitude}`
         );
         const data = await response.json();
+        console.log("💨 Wind data received:", data.grid?.length, "points");
 
         if (data.grid && data.grid.length > 0 && mapRef.current) {
           // Remove old velocity layer
@@ -197,6 +229,7 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
           const skipFactor = isMobile ? 5 : 3;
           const fontSize = isMobile ? 16 : 20;
 
+          let arrowCount = 0;
           data.grid.forEach((point: any, index: number) => {
             // Only show every Nth point to avoid clutter
             if (index % skipFactor !== 0) return;
@@ -212,11 +245,13 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
               });
 
               L.marker([point.lat, point.lon], { icon }).addTo(windGroup);
+              arrowCount++;
             }
           });
 
           windGroup.addTo(mapRef.current);
           velocityLayerRef.current = windGroup;
+          console.log("💨 Wind layer added to map with", arrowCount, "arrows!");
         }
       } catch (error) {
         console.error("Error loading wind data:", error);
@@ -226,11 +261,11 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
     };
 
     loadWind();
-  }, [latitude, longitude, showWind, isMobile]);
+  }, [latitude, longitude, showWind, isMobile, mapInitialized]);
 
   // Load pollution sources
   useEffect(() => {
-    if (!mapInitializedRef.current || !mapRef.current || !showSources) {
+    if (!mapInitialized || !mapRef.current || !showSources) {
       sourceMarkersRef.current.forEach((marker) => marker.remove());
       sourceMarkersRef.current = [];
       return;
@@ -300,7 +335,7 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
     };
 
     loadSources();
-  }, [latitude, longitude, showSources]);
+  }, [latitude, longitude, showSources, mapInitialized]);
 
   return (
     <div className="glass-dark rounded-3xl p-8 shadow-2xl animate-fadeIn">
@@ -329,6 +364,15 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
             <span className="text-sm font-medium">Loading...</span>
           </div>
         )}
+      </div>
+
+      {/* Debug Panel */}
+      <div className="mb-4 p-3 bg-yellow-500/20 border border-yellow-500/50 rounded-lg">
+        <p className="text-yellow-200 text-sm font-mono">
+          DEBUG: mapInit={mapInitialized ? "✅" : "❌"} | heatmap=
+          {showHeatmap ? "ON" : "OFF"} | wind={showWind ? "ON" : "OFF"} |
+          sources={showSources ? "ON" : "OFF"}
+        </p>
       </div>
 
       {/* Layer Controls */}
