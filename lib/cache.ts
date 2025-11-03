@@ -107,7 +107,7 @@ export const cache = new SimpleCache();
 export const CACHE_TTL = {
   AQI_GRID: 15 * 60, // 15 minutes - AQI changes slowly
   WIND: 30 * 60, // 30 minutes - Wind changes moderately
-  POLLUTION_SOURCES: 24 * 60 * 60, // 24 hours - Infrastructure changes rarely
+  POLLUTION_SOURCES: 5 * 60, // 5 minutes - Reduced for testing location changes
   WILDFIRES: 60 * 60, // 1 hour - Wildfires can change quickly
   POLLEN: 60 * 60, // 1 hour - Pollen levels change throughout the day
 } as const;
@@ -131,4 +131,3 @@ if (typeof window === "undefined") {
     cache.clearExpired();
   }, 5 * 60 * 1000);
 }
-

@@ -25,8 +25,8 @@ export async function GET(request: NextRequest) {
 
     // Check cache first
     const cacheKey = generateCacheKey("aqi-grid", {
-      lat: lat.toFixed(2),
-      lon: lon.toFixed(2),
+      lat: lat.toFixed(4),
+      lon: lon.toFixed(4),
       radius: rad,
     });
 
