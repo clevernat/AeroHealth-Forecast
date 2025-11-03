@@ -14,11 +14,19 @@ import PollenCard from "@/components/PollenCard";
 import InfoModal from "@/components/InfoModal";
 import HourlyForecast from "@/components/HourlyForecast";
 import DailyForecast from "@/components/DailyForecast";
+import NotificationBanner from "@/components/NotificationBanner";
 
-// Dynamically import MapView to avoid SSR issues with Leaflet
+// Dynamically import MapView and HistoricalData to avoid SSR issues
 const MapView = dynamic(() => import("@/components/MapView"), {
   ssr: false,
   loading: () => <div className="text-center p-8">Loading map...</div>,
+});
+
+const HistoricalData = dynamic(() => import("@/components/HistoricalData"), {
+  ssr: false,
+  loading: () => (
+    <div className="text-center p-8">Loading historical data...</div>
+  ),
 });
 
 export default function Home() {
@@ -39,10 +47,11 @@ export default function Home() {
     id: string;
   } | null>(null);
   const [activeView, setActiveView] = useState<
-    "dashboard" | "hourly" | "daily" | "map"
+    "dashboard" | "hourly" | "daily" | "map" | "history"
   >("dashboard");
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [pollutionSources, setPollutionSources] = useState<any[]>([]);
 
   useEffect(() => {
     async function fetchLocation() {
@@ -124,6 +133,19 @@ export default function Home() {
             peakPollen: pollenJson.daily[index] || item.peakPollen,
           }))
         );
+
+        // Fetch pollution sources for notifications
+        try {
+          const sourcesResponse = await fetch(
+            `/api/pollution-sources?latitude=${loc.latitude}&longitude=${loc.longitude}&radius=50`
+          );
+          if (sourcesResponse.ok) {
+            const sourcesJson = await sourcesResponse.json();
+            setPollutionSources(sourcesJson.sources || []);
+          }
+        } catch (err) {
+          console.error("Failed to fetch pollution sources:", err);
+        }
 
         // Update last updated timestamp
         setLastUpdated(new Date());
@@ -342,6 +364,11 @@ export default function Home() {
               label: "Map",
               icon: "M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7",
             },
+            {
+              id: "history",
+              label: "History",
+              icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z",
+            },
           ].map((view) => (
             <button
               key={view.id}
@@ -373,6 +400,14 @@ export default function Home() {
           ))}
         </div>
 
+        {/* Notifications */}
+        {aqiData && (
+          <NotificationBanner
+            aqi={aqiData.aqi}
+            pollutionSources={pollutionSources}
+          />
+        )}
+
         {/* Content */}
         {activeView === "dashboard" && aqiData && pollenData && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -397,6 +432,13 @@ export default function Home() {
             latitude={location.latitude}
             longitude={location.longitude}
             aqi={aqiData.aqi}
+          />
+        )}
+
+        {activeView === "history" && location && (
+          <HistoricalData
+            latitude={location.latitude}
+            longitude={location.longitude}
           />
         )}
 
