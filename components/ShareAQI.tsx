@@ -243,7 +243,7 @@ ${window.location.origin}`;
             </div>
 
             <div className="space-y-2.5">
-              {navigator.share && (
+              {typeof navigator !== "undefined" && "share" in navigator && (
                 <button
                   onClick={shareNative}
                   className="group w-full flex items-center gap-3 p-4 rounded-2xl bg-white/5 hover:bg-gradient-to-r hover:from-blue-500/20 hover:to-cyan-500/20 transition-all duration-300 hover:scale-[1.02] active:scale-95"

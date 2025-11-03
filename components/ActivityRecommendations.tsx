@@ -291,7 +291,7 @@ export default function ActivityRecommendations({
         ))}
       </div>
 
-      {pollutants && pollutants.pm2_5 > 35 && (
+      {pollutants && pollutants.pm2_5 && pollutants.pm2_5 > 35 && (
         <div className="mt-6 p-4 bg-red-500/10 rounded-xl border border-red-400/30">
           <p className="text-red-200 text-sm">
             <strong>⚠️ High PM2.5 Alert:</strong> Fine particles at{" "}
