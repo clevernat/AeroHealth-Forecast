@@ -48,6 +48,7 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
     longitude,
   ]);
   const [mapZoom, setMapZoom] = useState<number>(12);
+  const [isMapMoving, setIsMapMoving] = useState(false);
 
   // Detect mobile devices
   useEffect(() => {
@@ -64,15 +65,22 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
     if (mapRef.current && mapInitializedRef.current) {
       console.log(`📍 Location changed to: [${latitude}, ${longitude}]`);
 
-      // Pan to new location with animation
+      // Set flag that map is moving
+      setIsMapMoving(true);
+
+      // Pan to new location WITHOUT animation for instant update
       mapRef.current.setView([latitude, longitude], 12, {
-        animate: true,
-        duration: 0.5, // 500ms animation
+        animate: false, // No animation = instant pan
       });
 
-      // Update state immediately (don't wait for animation)
+      // Update state and clear moving flag
       setMapCenter([latitude, longitude]);
       setMapZoom(12);
+
+      // Clear moving flag after a brief delay to ensure map has updated
+      setTimeout(() => {
+        setIsMapMoving(false);
+      }, 100);
     }
   }, [latitude, longitude]);
 
@@ -342,9 +350,12 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
 
   // Load pollution sources
   useEffect(() => {
-    if (!mapInitialized || !mapRef.current || !showSources) {
-      sourceMarkersRef.current.forEach((marker) => marker.remove());
-      sourceMarkersRef.current = [];
+    // Don't load sources if map is moving or not initialized
+    if (!mapInitialized || !mapRef.current || !showSources || isMapMoving) {
+      if (!showSources) {
+        sourceMarkersRef.current.forEach((marker) => marker.remove());
+        sourceMarkersRef.current = [];
+      }
       return;
     }
 
@@ -482,6 +493,7 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
     showSources,
     mapInitialized,
     sourcesOpacity,
+    isMapMoving,
   ]);
 
   return (
