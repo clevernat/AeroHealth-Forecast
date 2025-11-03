@@ -16,6 +16,11 @@ import HourlyForecast from "@/components/HourlyForecast";
 import DailyForecast from "@/components/DailyForecast";
 import NotificationBanner from "@/components/NotificationBanner";
 import LocationSearch from "@/components/LocationSearch";
+import HealthProfile, { HealthConditions } from "@/components/HealthProfile";
+import ActivityRecommendations from "@/components/ActivityRecommendations";
+import ShareAQI from "@/components/ShareAQI";
+import CommunityReports from "@/components/CommunityReports";
+import PublicHealthDashboard from "@/components/PublicHealthDashboard";
 
 // Dynamically import MapView and HistoricalData to avoid SSR issues
 const MapView = dynamic(() => import("@/components/MapView"), {
@@ -48,13 +53,28 @@ export default function Home() {
     id: string;
   } | null>(null);
   const [activeView, setActiveView] = useState<
-    "dashboard" | "hourly" | "daily" | "map" | "history"
+    | "dashboard"
+    | "hourly"
+    | "daily"
+    | "map"
+    | "history"
+    | "health"
+    | "community"
   >("dashboard");
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [pollutionSources, setPollutionSources] = useState<any[]>([]);
   const [locationName, setLocationName] = useState<string>("");
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  const [healthConditions, setHealthConditions] = useState<HealthConditions>({
+    asthma: false,
+    allergies: false,
+    heartDisease: false,
+    copd: false,
+    pregnancy: false,
+    children: false,
+    elderly: false,
+  });
 
   // Fetch location name from coordinates
   const fetchLocationName = useCallback(
@@ -349,6 +369,30 @@ export default function Home() {
             />
           </div>
 
+          {/* Health Profile, Share, and Community Buttons */}
+          <div className="flex flex-wrap items-center justify-center gap-3 mb-4">
+            <HealthProfile onProfileChange={setHealthConditions} />
+            {aqiData && location && (
+              <>
+                <ShareAQI
+                  aqi={aqiData.aqi}
+                  category={aqiData.category}
+                  location={locationName}
+                  pollutants={{
+                    pm2_5: aqiData.pollutants.pm2_5,
+                    pm10: aqiData.pollutants.pm10,
+                    ozone: aqiData.pollutants.ozone,
+                  }}
+                />
+                <CommunityReports
+                  latitude={location.latitude}
+                  longitude={location.longitude}
+                  locationName={locationName}
+                />
+              </>
+            )}
+          </div>
+
           <div className="flex flex-col md:flex-row items-center justify-center gap-3 mt-4">
             {lastUpdated && (
               <div className="inline-flex items-center gap-2 glass-dark px-5 py-2.5 rounded-full text-sm text-white/80 font-medium border border-white/20">
@@ -424,6 +468,16 @@ export default function Home() {
               label: "History",
               icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z",
             },
+            {
+              id: "health",
+              label: "Health",
+              icon: "M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z",
+            },
+            {
+              id: "community",
+              label: "Public Health",
+              icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z",
+            },
           ].map((view) => (
             <button
               key={view.id}
@@ -494,6 +548,31 @@ export default function Home() {
           <HistoricalData
             latitude={location.latitude}
             longitude={location.longitude}
+          />
+        )}
+
+        {activeView === "health" && aqiData && (
+          <ActivityRecommendations
+            aqi={aqiData.aqi}
+            category={aqiData.category}
+            healthConditions={healthConditions}
+            pollutants={{
+              pm2_5: aqiData.pollutants.pm2_5,
+              pm10: aqiData.pollutants.pm10,
+              ozone: aqiData.pollutants.ozone,
+            }}
+          />
+        )}
+
+        {activeView === "community" && dailyForecast.length > 0 && aqiData && (
+          <PublicHealthDashboard
+            dailyForecast={dailyForecast.map((day) => ({
+              date: day.date,
+              peakAQI: day.peakAQI,
+              avgAQI: day.avgAQI,
+            }))}
+            currentAQI={aqiData.aqi}
+            location={locationName}
           />
         )}
 
