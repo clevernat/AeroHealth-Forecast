@@ -227,7 +227,9 @@ export default function Home() {
     const newLocation = { latitude, longitude };
     setLocation(newLocation);
     setLocationName(name);
-    fetchData(newLocation);
+    // Fetch data in background without showing loading screen
+    // This allows instant map update while data loads
+    fetchData(newLocation, true); // Use manual refresh mode to avoid full loading screen
   };
 
   // Handle "Use My Current Location" button

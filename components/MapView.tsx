@@ -42,11 +42,12 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
   const [windOpacity, setWindOpacity] = useState(1);
   const [sourcesOpacity, setSourcesOpacity] = useState(1);
 
-  // Track map center for dynamic updates when user pans/zooms
+  // Track map center and zoom for dynamic updates when user pans/zooms
   const [mapCenter, setMapCenter] = useState<[number, number]>([
     latitude,
     longitude,
   ]);
+  const [mapZoom, setMapZoom] = useState<number>(12);
 
   // Detect mobile devices
   useEffect(() => {
@@ -78,15 +79,18 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
       minZoom: 3,
     }).addTo(mapRef.current);
 
-    // Add event listener to update map center when user moves the map
+    // Add event listeners to update map center and zoom when user moves/zooms the map
     const handleMoveEnd = () => {
       if (mapRef.current) {
         const center = mapRef.current.getCenter();
+        const zoom = mapRef.current.getZoom();
         setMapCenter([center.lat, center.lng]);
+        setMapZoom(zoom);
       }
     };
 
     mapRef.current.on("moveend", handleMoveEnd);
+    mapRef.current.on("zoomend", handleMoveEnd);
 
     // Mark map as initialized - use setTimeout to ensure state update triggers after map is ready
     mapInitializedRef.current = true;
@@ -97,6 +101,7 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
     return () => {
       if (mapRef.current) {
         mapRef.current.off("moveend", handleMoveEnd);
+        mapRef.current.off("zoomend", handleMoveEnd);
         mapRef.current.remove();
         mapRef.current = null;
       }
@@ -154,8 +159,18 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
       try {
         setLoading(true);
 
-        // Adjust radius based on device
-        const radius = isMobile ? 0.2 : 0.3;
+        // Adjust radius based on zoom level and device
+        // Higher zoom = smaller area, lower zoom = larger area
+        let radius: number;
+        if (mapZoom >= 13) {
+          radius = isMobile ? 0.15 : 0.2; // Very zoomed in - small area
+        } else if (mapZoom >= 11) {
+          radius = isMobile ? 0.25 : 0.35; // Medium zoom - medium area
+        } else if (mapZoom >= 9) {
+          radius = isMobile ? 0.4 : 0.5; // Zoomed out - larger area
+        } else {
+          radius = isMobile ? 0.6 : 0.8; // Very zoomed out - very large area
+        }
 
         const response = await fetch(
           `/api/aqi-grid?latitude=${mapCenter[0]}&longitude=${mapCenter[1]}&radius=${radius}`
@@ -209,7 +224,14 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
     };
 
     loadHeatmap();
-  }, [mapCenter, showHeatmap, isMobile, mapInitialized]);
+  }, [
+    mapCenter,
+    mapZoom,
+    showHeatmap,
+    isMobile,
+    mapInitialized,
+    heatmapOpacity,
+  ]);
 
   // Update heatmap opacity without reloading
   useEffect(() => {
@@ -299,8 +321,22 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
 
       try {
         setLoading(true);
+
+        // Adjust search radius based on zoom level
+        // Higher zoom = smaller search area, lower zoom = larger search area
+        let searchRadius: number;
+        if (mapZoom >= 13) {
+          searchRadius = 10; // Very zoomed in - 10km radius
+        } else if (mapZoom >= 11) {
+          searchRadius = 25; // Medium zoom - 25km radius
+        } else if (mapZoom >= 9) {
+          searchRadius = 50; // Zoomed out - 50km radius
+        } else {
+          searchRadius = 100; // Very zoomed out - 100km radius
+        }
+
         const response = await fetch(
-          `/api/pollution-sources?latitude=${mapCenter[0]}&longitude=${mapCenter[1]}&radius=25`
+          `/api/pollution-sources?latitude=${mapCenter[0]}&longitude=${mapCenter[1]}&radius=${searchRadius}`
         );
         const data = await response.json();
 
@@ -362,7 +398,7 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
     };
 
     loadSources();
-  }, [mapCenter, showSources, mapInitialized, sourcesOpacity]);
+  }, [mapCenter, mapZoom, showSources, mapInitialized, sourcesOpacity]);
 
   return (
     <div className="glass-dark rounded-3xl p-8 shadow-2xl animate-fadeIn">
