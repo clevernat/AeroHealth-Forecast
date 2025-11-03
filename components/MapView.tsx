@@ -36,6 +36,7 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
   const [showSources, setShowSources] = useState(true);
   const [loading, setLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [mapInitialized, setMapInitialized] = useState(false);
 
   // Detect mobile devices
   useEffect(() => {
@@ -61,11 +62,15 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     }).addTo(mapRef.current);
 
+    // Mark map as initialized
+    setMapInitialized(true);
+
     return () => {
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
       }
+      setMapInitialized(false);
     };
   }, []);
 
@@ -104,15 +109,17 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
 
   // Load heatmap data
   useEffect(() => {
-    if (!mapRef.current || !showHeatmap) {
-      if (heatLayerRef.current) {
-        mapRef.current?.removeLayer(heatLayerRef.current);
+    if (!mapInitialized || !mapRef.current || !showHeatmap) {
+      if (heatLayerRef.current && mapRef.current) {
+        mapRef.current.removeLayer(heatLayerRef.current);
         heatLayerRef.current = null;
       }
       return;
     }
 
     const loadHeatmap = async () => {
+      if (!mapRef.current) return;
+
       try {
         setLoading(true);
 
@@ -157,13 +164,13 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
     };
 
     loadHeatmap();
-  }, [latitude, longitude, showHeatmap, isMobile]);
+  }, [latitude, longitude, showHeatmap, isMobile, mapInitialized]);
 
   // Load wind data
   useEffect(() => {
-    if (!mapRef.current || !showWind) {
-      if (velocityLayerRef.current) {
-        mapRef.current?.removeLayer(velocityLayerRef.current);
+    if (!mapInitialized || !mapRef.current || !showWind) {
+      if (velocityLayerRef.current && mapRef.current) {
+        mapRef.current.removeLayer(velocityLayerRef.current);
         velocityLayerRef.current = null;
       }
       return;
@@ -219,17 +226,19 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
     };
 
     loadWind();
-  }, [latitude, longitude, showWind, isMobile]);
+  }, [latitude, longitude, showWind, isMobile, mapInitialized]);
 
   // Load pollution sources
   useEffect(() => {
-    if (!mapRef.current || !showSources) {
+    if (!mapInitialized || !mapRef.current || !showSources) {
       sourceMarkersRef.current.forEach((marker) => marker.remove());
       sourceMarkersRef.current = [];
       return;
     }
 
     const loadSources = async () => {
+      if (!mapRef.current) return;
+
       try {
         setLoading(true);
         const response = await fetch(
@@ -241,7 +250,7 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
         sourceMarkersRef.current.forEach((marker) => marker.remove());
         sourceMarkersRef.current = [];
 
-        if (data.sources && data.sources.length > 0) {
+        if (data.sources && data.sources.length > 0 && mapRef.current) {
           data.sources.forEach((source: PollutionSource) => {
             const icon = getSourceIcon(source.type, source.severity);
             const marker = L.marker([source.latitude, source.longitude], {
@@ -250,7 +259,11 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
                 html: icon,
                 iconSize: [30, 30],
               }),
-            }).addTo(mapRef.current!);
+            });
+
+            if (mapRef.current) {
+              marker.addTo(mapRef.current);
+            }
 
             marker.bindPopup(`
               <div style="font-family: sans-serif; min-width: 200px;">
@@ -287,7 +300,7 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
     };
 
     loadSources();
-  }, [latitude, longitude, showSources]);
+  }, [latitude, longitude, showSources, mapInitialized]);
 
   return (
     <div className="glass-dark rounded-3xl p-8 shadow-2xl animate-fadeIn">
