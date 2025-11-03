@@ -1,26 +1,31 @@
-import { AQICategory, PollenCategory, Pollutant, PollutantLevels } from '@/types';
-import { AQI_CATEGORIES, POLLEN_CATEGORIES } from './constants';
+import {
+  AQICategory,
+  PollenCategory,
+  Pollutant,
+  PollutantLevels,
+} from "@/types";
+import { AQI_CATEGORIES, POLLEN_CATEGORIES } from "./constants";
 
 /**
  * Get AQI category based on AQI value
  */
 export function getAQICategory(aqi: number): AQICategory {
-  if (aqi <= 50) return 'good';
-  if (aqi <= 100) return 'moderate';
-  if (aqi <= 150) return 'unhealthy_sensitive';
-  if (aqi <= 200) return 'unhealthy';
-  if (aqi <= 300) return 'very_unhealthy';
-  return 'hazardous';
+  if (aqi <= 50) return "good";
+  if (aqi <= 100) return "moderate";
+  if (aqi <= 150) return "unhealthy_sensitive";
+  if (aqi <= 200) return "unhealthy";
+  if (aqi <= 300) return "very_unhealthy";
+  return "hazardous";
 }
 
 /**
  * Get pollen category based on pollen level
  */
 export function getPollenCategory(level: number): PollenCategory {
-  if (level <= 2.4) return 'low';
-  if (level <= 4.8) return 'moderate';
-  if (level <= 7.2) return 'high';
-  return 'very_high';
+  if (level <= 2.4) return "low";
+  if (level <= 4.8) return "moderate";
+  if (level <= 7.2) return "high";
+  return "very_high";
 }
 
 /**
@@ -30,25 +35,40 @@ export function getPrimaryPollutant(pollutants: PollutantLevels): Pollutant {
   const pollutantAQIs: { pollutant: Pollutant; aqi: number }[] = [];
 
   if (pollutants.pm2_5 !== undefined) {
-    pollutantAQIs.push({ pollutant: 'pm2_5', aqi: calculatePM25AQI(pollutants.pm2_5) });
+    pollutantAQIs.push({
+      pollutant: "pm2_5",
+      aqi: calculatePM25AQI(pollutants.pm2_5),
+    });
   }
   if (pollutants.pm10 !== undefined) {
-    pollutantAQIs.push({ pollutant: 'pm10', aqi: calculatePM10AQI(pollutants.pm10) });
+    pollutantAQIs.push({
+      pollutant: "pm10",
+      aqi: calculatePM10AQI(pollutants.pm10),
+    });
   }
   if (pollutants.ozone !== undefined) {
-    pollutantAQIs.push({ pollutant: 'ozone', aqi: calculateOzoneAQI(pollutants.ozone) });
+    pollutantAQIs.push({
+      pollutant: "ozone",
+      aqi: calculateOzoneAQI(pollutants.ozone),
+    });
   }
   if (pollutants.no2 !== undefined) {
-    pollutantAQIs.push({ pollutant: 'no2', aqi: calculateNO2AQI(pollutants.no2) });
+    pollutantAQIs.push({
+      pollutant: "no2",
+      aqi: calculateNO2AQI(pollutants.no2),
+    });
   }
   if (pollutants.so2 !== undefined) {
-    pollutantAQIs.push({ pollutant: 'so2', aqi: calculateSO2AQI(pollutants.so2) });
+    pollutantAQIs.push({
+      pollutant: "so2",
+      aqi: calculateSO2AQI(pollutants.so2),
+    });
   }
   if (pollutants.co !== undefined) {
-    pollutantAQIs.push({ pollutant: 'co', aqi: calculateCOAQI(pollutants.co) });
+    pollutantAQIs.push({ pollutant: "co", aqi: calculateCOAQI(pollutants.co) });
   }
 
-  if (pollutantAQIs.length === 0) return 'pm2_5';
+  if (pollutantAQIs.length === 0) return "pm2_5";
 
   // Return the pollutant with the highest AQI
   pollutantAQIs.sort((a, b) => b.aqi - a.aqi);
@@ -149,12 +169,19 @@ function calculateCOAQI(concentration: number): number {
  */
 function calculateAQI(
   concentration: number,
-  breakpoints: Array<{ cLow: number; cHigh: number; iLow: number; iHigh: number }>
+  breakpoints: Array<{
+    cLow: number;
+    cHigh: number;
+    iLow: number;
+    iHigh: number;
+  }>
 ): number {
   for (const bp of breakpoints) {
     if (concentration >= bp.cLow && concentration <= bp.cHigh) {
       const aqi =
-        ((bp.iHigh - bp.iLow) / (bp.cHigh - bp.cLow)) * (concentration - bp.cLow) + bp.iLow;
+        ((bp.iHigh - bp.iLow) / (bp.cHigh - bp.cLow)) *
+          (concentration - bp.cLow) +
+        bp.iLow;
       return Math.round(aqi);
     }
   }
@@ -183,26 +210,44 @@ export function getPollenColor(level: number): string {
  */
 export function formatPollutantName(pollutant: Pollutant): string {
   const names: Record<Pollutant, string> = {
-    pm2_5: 'PM2.5',
-    pm10: 'PM10',
-    ozone: 'Ozone',
-    no2: 'NO₂',
-    so2: 'SO₂',
-    co: 'CO',
+    pm2_5: "PM2.5",
+    pm10: "PM10",
+    ozone: "Ozone",
+    no2: "NO₂",
+    so2: "SO₂",
+    co: "CO",
   };
   return names[pollutant];
 }
 
 /**
- * Get user's geolocation
+ * Get user's geolocation with timeout
  */
 export function getUserLocation(): Promise<GeolocationPosition> {
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
-      reject(new Error('Geolocation is not supported by your browser'));
+      reject(new Error("Geolocation is not supported by your browser"));
     } else {
-      navigator.geolocation.getCurrentPosition(resolve, reject);
+      // Set a 3-second timeout to prevent long waits
+      const timeoutId = setTimeout(() => {
+        reject(new Error("Geolocation request timed out"));
+      }, 3000);
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          clearTimeout(timeoutId);
+          resolve(position);
+        },
+        (error) => {
+          clearTimeout(timeoutId);
+          reject(error);
+        },
+        {
+          timeout: 3000,
+          maximumAge: 60000, // Cache position for 1 minute
+          enableHighAccuracy: false, // Faster, less accurate
+        }
+      );
     }
   });
 }
-

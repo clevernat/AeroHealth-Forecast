@@ -443,56 +443,71 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
         <h3 className="text-white font-medium mb-3 text-sm">
           Layer Opacity Controls
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Heatmap Opacity */}
-          <div>
-            <label className="text-white/70 text-xs mb-1 block">
-              🗺️ Heatmap: {Math.round(heatmapOpacity * 100)}%
+          <div className="p-3 bg-white/5 rounded-lg border border-white/10">
+            <label className="text-white/90 text-sm mb-2 block font-medium">
+              🗺️ Heatmap
             </label>
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.1"
-              value={heatmapOpacity}
-              onChange={(e) => setHeatmapOpacity(parseFloat(e.target.value))}
-              className="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer slider slider-heatmap"
-              disabled={!showHeatmap}
-            />
+            <div className="flex items-center gap-3">
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.1"
+                value={heatmapOpacity}
+                onChange={(e) => setHeatmapOpacity(parseFloat(e.target.value))}
+                className="flex-1 h-2 bg-white/20 rounded-lg appearance-none cursor-pointer slider slider-heatmap"
+                disabled={!showHeatmap}
+              />
+              <span className="text-white/70 text-xs font-bold min-w-[45px] text-right">
+                {Math.round(heatmapOpacity * 100)}%
+              </span>
+            </div>
           </div>
 
           {/* Wind Opacity */}
-          <div>
-            <label className="text-white/70 text-xs mb-1 block">
-              🌬️ Wind: {Math.round(windOpacity * 100)}%
+          <div className="p-3 bg-white/5 rounded-lg border border-white/10">
+            <label className="text-white/90 text-sm mb-2 block font-medium">
+              🌬️ Wind
             </label>
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.1"
-              value={windOpacity}
-              onChange={(e) => setWindOpacity(parseFloat(e.target.value))}
-              className="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer slider slider-wind"
-              disabled={!showWind}
-            />
+            <div className="flex items-center gap-3">
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.1"
+                value={windOpacity}
+                onChange={(e) => setWindOpacity(parseFloat(e.target.value))}
+                className="flex-1 h-2 bg-white/20 rounded-lg appearance-none cursor-pointer slider slider-wind"
+                disabled={!showWind}
+              />
+              <span className="text-white/70 text-xs font-bold min-w-[45px] text-right">
+                {Math.round(windOpacity * 100)}%
+              </span>
+            </div>
           </div>
 
           {/* Sources Opacity */}
-          <div>
-            <label className="text-white/70 text-xs mb-1 block">
-              🏭 Sources: {Math.round(sourcesOpacity * 100)}%
+          <div className="p-3 bg-white/5 rounded-lg border border-white/10">
+            <label className="text-white/90 text-sm mb-2 block font-medium">
+              🏭 Sources
             </label>
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.1"
-              value={sourcesOpacity}
-              onChange={(e) => setSourcesOpacity(parseFloat(e.target.value))}
-              className="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer slider slider-sources"
-              disabled={!showSources}
-            />
+            <div className="flex items-center gap-3">
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.1"
+                value={sourcesOpacity}
+                onChange={(e) => setSourcesOpacity(parseFloat(e.target.value))}
+                className="flex-1 h-2 bg-white/20 rounded-lg appearance-none cursor-pointer slider slider-sources"
+                disabled={!showSources}
+              />
+              <span className="text-white/70 text-xs font-bold min-w-[45px] text-right">
+                {Math.round(sourcesOpacity * 100)}%
+              </span>
+            </div>
           </div>
         </div>
       </div>
