@@ -110,7 +110,7 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
     };
   }, []);
 
-  // Update current location marker
+  // Update current location marker and map center when location changes
   useEffect(() => {
     if (!mapRef.current) return;
 
@@ -141,6 +141,10 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
 
     // Center map on location
     mapRef.current.setView([latitude, longitude], 11);
+
+    // CRITICAL FIX: Update mapCenter state to match new location
+    // This ensures all layers (heatmap, wind, sources) fetch data for the new location
+    setMapCenter([latitude, longitude]);
   }, [latitude, longitude, aqi]);
 
   // Load heatmap data
