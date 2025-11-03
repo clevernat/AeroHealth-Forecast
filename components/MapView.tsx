@@ -366,7 +366,16 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
         sourceMarkersRef.current = [];
 
         if (data.sources && data.sources.length > 0 && mapRef.current) {
-          data.sources.forEach((source: PollutionSource) => {
+          console.log(
+            `📍 Adding ${data.sources.length} pollution source markers to map`
+          );
+          data.sources.forEach((source: PollutionSource, index: number) => {
+            console.log(
+              `  Marker ${index + 1}: ${source.name} at [${source.latitude}, ${
+                source.longitude
+              }]`
+            );
+
             const icon = getSourceIcon(
               source.type,
               source.severity,
@@ -377,7 +386,9 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
                 className: "pollution-source-marker",
                 html: icon,
                 iconSize: [30, 30],
+                iconAnchor: [15, 15], // Center the icon
               }),
+              zIndexOffset: 1000, // Ensure markers appear above other layers
             });
 
             if (mapRef.current) {
@@ -410,6 +421,11 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
 
             sourceMarkersRef.current.push(marker);
           });
+          console.log(
+            `✅ Successfully added ${sourceMarkersRef.current.length} markers to map`
+          );
+        } else {
+          console.log(`⚠️ No pollution sources to display`);
         }
       } catch (error) {
         console.error("Error loading pollution sources:", error);
