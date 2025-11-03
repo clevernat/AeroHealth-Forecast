@@ -73,14 +73,20 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
         animate: false, // No animation = instant pan
       });
 
-      // Update state and clear moving flag
+      // Force Leaflet to recalculate its internal state
+      mapRef.current.invalidateSize();
+
+      // Update state
       setMapCenter([latitude, longitude]);
       setMapZoom(12);
 
       // Clear moving flag after a brief delay to ensure map has updated
       setTimeout(() => {
+        if (mapRef.current) {
+          mapRef.current.invalidateSize(); // Invalidate again after delay
+        }
         setIsMapMoving(false);
-      }, 100);
+      }, 150);
     }
   }, [latitude, longitude]);
 
@@ -164,17 +170,8 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
 
     currentMarkerRef.current = marker;
 
-    // Center map on location
-    mapRef.current.setView([latitude, longitude], 11);
-
-    // CRITICAL FIX: Update mapCenter state to match new location
-    // This ensures all layers (heatmap, wind, sources) fetch data for the new location
-    console.log(
-      `🗺️ MapView: Location changed to [${latitude.toFixed(
-        4
-      )}, ${longitude.toFixed(4)}]`
-    );
-    setMapCenter([latitude, longitude]);
+    // Note: Map view is set in the location change useEffect below
+    // Don't set view here to avoid conflicts
   }, [latitude, longitude, aqi]);
 
   // Load heatmap data
