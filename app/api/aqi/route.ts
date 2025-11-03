@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
 
   try {
     // Fetch air quality data from Open-Meteo with cache-busting and real-time settings
-    const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${latitude}&longitude=${longitude}&hourly=pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,sulphur_dioxide,ozone,us_aqi&timezone=auto&forecast_days=5`;
+    const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${latitude}&longitude=${longitude}&hourly=pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,sulphur_dioxide,ozone,us_aqi&timezone=auto&forecast_days=7`;
 
     const response = await fetch(aqiUrl, {
       cache: "no-store", // Disable Next.js caching for real-time data
@@ -64,6 +64,14 @@ export async function GET(request: NextRequest) {
       hourlyForecast.push({
         timestamp: data.hourly.time[i],
         aqi: data.hourly.us_aqi[i] || 0,
+        pollutants: {
+          pm2_5: data.hourly.pm2_5?.[i] || 0,
+          pm10: data.hourly.pm10?.[i] || 0,
+          ozone: data.hourly.ozone?.[i] || 0,
+          no2: data.hourly.nitrogen_dioxide?.[i] || 0,
+          so2: data.hourly.sulphur_dioxide?.[i] || 0,
+          co: data.hourly.carbon_monoxide?.[i] || 0,
+        },
         pollen: {
           tree: 0,
           grass: 0,
@@ -72,11 +80,11 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Process 5-day forecast
+    // Process 7-day forecast
     const dailyForecast: DailyForecast[] = [];
     const hoursPerDay = 24;
 
-    for (let day = 0; day < 5; day++) {
+    for (let day = 0; day < 7; day++) {
       const startIdx = day * hoursPerDay;
       const endIdx = Math.min(startIdx + hoursPerDay, data.hourly.time.length);
 

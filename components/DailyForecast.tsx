@@ -34,6 +34,34 @@ export default function DailyForecast({ data }: DailyForecastProps) {
     weed: day.peakPollen.weed,
   }));
 
+  // Calculate trend analysis
+  const calculateTrend = () => {
+    if (data.length < 2) return { direction: "stable", percentage: 0 };
+
+    const firstHalf = data.slice(0, Math.floor(data.length / 2));
+    const secondHalf = data.slice(Math.floor(data.length / 2));
+
+    const firstAvg =
+      firstHalf.reduce((sum, d) => sum + d.avgAQI, 0) / firstHalf.length;
+    const secondAvg =
+      secondHalf.reduce((sum, d) => sum + d.avgAQI, 0) / secondHalf.length;
+
+    const change = ((secondAvg - firstAvg) / firstAvg) * 100;
+
+    if (Math.abs(change) < 5) return { direction: "stable", percentage: 0 };
+    return {
+      direction: change > 0 ? "worsening" : "improving",
+      percentage: Math.abs(Math.round(change)),
+    };
+  };
+
+  const trend = calculateTrend();
+  const avgAQI = Math.round(
+    data.reduce((sum, d) => sum + d.avgAQI, 0) / data.length
+  );
+  const peakAQI = Math.max(...data.map((d) => d.peakAQI));
+  const bestAQI = Math.min(...data.map((d) => d.avgAQI));
+
   return (
     <div className="glass-dark rounded-3xl p-8 shadow-2xl animate-fadeIn">
       <div className="flex items-center gap-3 mb-6">
@@ -52,7 +80,62 @@ export default function DailyForecast({ data }: DailyForecastProps) {
             />
           </svg>
         </div>
-        <h2 className="text-3xl font-bold text-white">5-Day Forecast</h2>
+        <h2 className="text-3xl font-bold text-white">
+          7-Day Extended Forecast
+        </h2>
+      </div>
+
+      {/* Trend Analysis Summary */}
+      <div className="mb-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-white/10 border border-white/20 rounded-xl p-4">
+          <p className="text-white/70 text-sm mb-1">Week Average</p>
+          <p className="text-2xl font-bold text-white">{avgAQI}</p>
+          <p className="text-xs text-white/60 mt-1">
+            {getAQICategory(avgAQI).replace(/_/g, " ").toUpperCase()}
+          </p>
+        </div>
+        <div className="bg-white/10 border border-white/20 rounded-xl p-4">
+          <p className="text-white/70 text-sm mb-1">Peak AQI</p>
+          <p className="text-2xl font-bold text-white">{peakAQI}</p>
+          <p className="text-xs text-white/60 mt-1">Highest expected</p>
+        </div>
+        <div className="bg-white/10 border border-white/20 rounded-xl p-4">
+          <p className="text-white/70 text-sm mb-1">Best AQI</p>
+          <p className="text-2xl font-bold text-white">{bestAQI}</p>
+          <p className="text-xs text-white/60 mt-1">Lowest expected</p>
+        </div>
+        <div className="bg-white/10 border border-white/20 rounded-xl p-4">
+          <p className="text-white/70 text-sm mb-1">Trend</p>
+          <div className="flex items-center gap-2">
+            {trend.direction === "improving" && (
+              <>
+                <span className="text-2xl">📉</span>
+                <div>
+                  <p className="text-lg font-bold text-green-400">Improving</p>
+                  <p className="text-xs text-white/60">-{trend.percentage}%</p>
+                </div>
+              </>
+            )}
+            {trend.direction === "worsening" && (
+              <>
+                <span className="text-2xl">📈</span>
+                <div>
+                  <p className="text-lg font-bold text-red-400">Worsening</p>
+                  <p className="text-xs text-white/60">+{trend.percentage}%</p>
+                </div>
+              </>
+            )}
+            {trend.direction === "stable" && (
+              <>
+                <span className="text-2xl">➡️</span>
+                <div>
+                  <p className="text-lg font-bold text-blue-400">Stable</p>
+                  <p className="text-xs text-white/60">±{trend.percentage}%</p>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Trend Charts Section */}

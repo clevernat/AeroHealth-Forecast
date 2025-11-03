@@ -25,9 +25,15 @@ export interface PollutantLevels {
   co?: number;
 }
 
-export type Pollutant = 'pm2_5' | 'pm10' | 'ozone' | 'no2' | 'so2' | 'co';
+export type Pollutant = "pm2_5" | "pm10" | "ozone" | "no2" | "so2" | "co";
 
-export type AQICategory = 'good' | 'moderate' | 'unhealthy_sensitive' | 'unhealthy' | 'very_unhealthy' | 'hazardous';
+export type AQICategory =
+  | "good"
+  | "moderate"
+  | "unhealthy_sensitive"
+  | "unhealthy"
+  | "very_unhealthy"
+  | "hazardous";
 
 export interface AQICategoryInfo {
   label: string;
@@ -51,7 +57,7 @@ export interface PollenLevel {
   category: PollenCategory;
 }
 
-export type PollenCategory = 'low' | 'moderate' | 'high' | 'very_high';
+export type PollenCategory = "low" | "moderate" | "high" | "very_high";
 
 export interface PollenCategoryInfo {
   label: string;
@@ -65,6 +71,14 @@ export interface PollenCategoryInfo {
 export interface HourlyForecast {
   timestamp: string;
   aqi: number;
+  pollutants?: {
+    pm2_5: number;
+    pm10: number;
+    ozone: number;
+    no2: number;
+    so2: number;
+    co: number;
+  };
   pollen: {
     tree: number;
     grass: number;
@@ -126,4 +140,3 @@ export interface OpenMeteoPollenResponse {
     ragweed_pollen?: number[];
   };
 }
-

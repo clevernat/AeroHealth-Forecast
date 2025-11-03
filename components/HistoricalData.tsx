@@ -218,10 +218,7 @@ export default function HistoricalData({
                     color: "#fff",
                   }}
                 />
-                <Legend
-                  wrapperStyle={{ color: "#fff" }}
-                  iconType="line"
-                />
+                <Legend wrapperStyle={{ color: "#fff" }} iconType="line" />
                 <Line
                   type="monotone"
                   dataKey="pm25"
@@ -287,9 +284,215 @@ export default function HistoricalData({
               </>
             )}
           </div>
+
+          {/* Comparison Section */}
+          {historicalData.length > 0 && (
+            <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+              <h3 className="text-xl font-bold text-white mb-4">
+                📊 Comparison Analysis
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Today vs Last Week */}
+                {historicalData.length >= 7 && (
+                  <div className="bg-white/10 border border-white/20 rounded-xl p-4">
+                    <p className="text-white/70 text-sm mb-2">
+                      Today vs Last Week
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs text-white/60">Today</p>
+                        <p className="text-2xl font-bold text-white">
+                          {historicalData[historicalData.length - 1].aqi}
+                        </p>
+                      </div>
+                      <div className="text-center">
+                        {(() => {
+                          const today =
+                            historicalData[historicalData.length - 1].aqi;
+                          const lastWeek =
+                            historicalData[
+                              Math.max(0, historicalData.length - 8)
+                            ]?.aqi || today;
+                          const change = ((today - lastWeek) / lastWeek) * 100;
+                          const isWorse = change > 0;
+                          return (
+                            <>
+                              <p
+                                className={`text-3xl ${
+                                  isWorse ? "text-red-400" : "text-green-400"
+                                }`}
+                              >
+                                {isWorse ? "↑" : "↓"}
+                              </p>
+                              <p
+                                className={`text-sm font-bold ${
+                                  isWorse ? "text-red-400" : "text-green-400"
+                                }`}
+                              >
+                                {Math.abs(Math.round(change))}%
+                              </p>
+                            </>
+                          );
+                        })()}
+                      </div>
+                      <div>
+                        <p className="text-xs text-white/60">Last Week</p>
+                        <p className="text-2xl font-bold text-white/70">
+                          {historicalData[
+                            Math.max(0, historicalData.length - 8)
+                          ]?.aqi || "N/A"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Today vs 2 Weeks Ago */}
+                {historicalData.length >= 14 && (
+                  <div className="bg-white/10 border border-white/20 rounded-xl p-4">
+                    <p className="text-white/70 text-sm mb-2">
+                      Today vs 2 Weeks Ago
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs text-white/60">Today</p>
+                        <p className="text-2xl font-bold text-white">
+                          {historicalData[historicalData.length - 1].aqi}
+                        </p>
+                      </div>
+                      <div className="text-center">
+                        {(() => {
+                          const today =
+                            historicalData[historicalData.length - 1].aqi;
+                          const twoWeeksAgo =
+                            historicalData[
+                              Math.max(0, historicalData.length - 15)
+                            ]?.aqi || today;
+                          const change =
+                            ((today - twoWeeksAgo) / twoWeeksAgo) * 100;
+                          const isWorse = change > 0;
+                          return (
+                            <>
+                              <p
+                                className={`text-3xl ${
+                                  isWorse ? "text-red-400" : "text-green-400"
+                                }`}
+                              >
+                                {isWorse ? "↑" : "↓"}
+                              </p>
+                              <p
+                                className={`text-sm font-bold ${
+                                  isWorse ? "text-red-400" : "text-green-400"
+                                }`}
+                              >
+                                {Math.abs(Math.round(change))}%
+                              </p>
+                            </>
+                          );
+                        })()}
+                      </div>
+                      <div>
+                        <p className="text-xs text-white/60">2 Weeks Ago</p>
+                        <p className="text-2xl font-bold text-white/70">
+                          {historicalData[
+                            Math.max(0, historicalData.length - 15)
+                          ]?.aqi || "N/A"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Today vs 1 Month Ago */}
+                {historicalData.length >= 30 && (
+                  <div className="bg-white/10 border border-white/20 rounded-xl p-4">
+                    <p className="text-white/70 text-sm mb-2">
+                      Today vs 1 Month Ago
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs text-white/60">Today</p>
+                        <p className="text-2xl font-bold text-white">
+                          {historicalData[historicalData.length - 1].aqi}
+                        </p>
+                      </div>
+                      <div className="text-center">
+                        {(() => {
+                          const today =
+                            historicalData[historicalData.length - 1].aqi;
+                          const oneMonthAgo = historicalData[0]?.aqi || today;
+                          const change =
+                            ((today - oneMonthAgo) / oneMonthAgo) * 100;
+                          const isWorse = change > 0;
+                          return (
+                            <>
+                              <p
+                                className={`text-3xl ${
+                                  isWorse ? "text-red-400" : "text-green-400"
+                                }`}
+                              >
+                                {isWorse ? "↑" : "↓"}
+                              </p>
+                              <p
+                                className={`text-sm font-bold ${
+                                  isWorse ? "text-red-400" : "text-green-400"
+                                }`}
+                              >
+                                {Math.abs(Math.round(change))}%
+                              </p>
+                            </>
+                          );
+                        })()}
+                      </div>
+                      <div>
+                        <p className="text-xs text-white/60">1 Month Ago</p>
+                        <p className="text-2xl font-bold text-white/70">
+                          {historicalData[0]?.aqi || "N/A"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Trend Summary */}
+              <div className="mt-6 p-4 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-400/30 rounded-xl">
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl">💡</span>
+                  <div>
+                    <p className="text-white font-bold mb-1">Trend Insight</p>
+                    <p className="text-white/80 text-sm">
+                      {(() => {
+                        if (historicalData.length < 7)
+                          return "Not enough data for trend analysis.";
+
+                        const today =
+                          historicalData[historicalData.length - 1].aqi;
+                        const weekAgo =
+                          historicalData[Math.max(0, historicalData.length - 8)]
+                            ?.aqi || today;
+                        const change = today - weekAgo;
+
+                        if (Math.abs(change) < 5) {
+                          return "Air quality has remained relatively stable over the past week.";
+                        } else if (change > 0) {
+                          return `Air quality has worsened by ${Math.abs(
+                            change
+                          )} AQI points compared to last week. Consider limiting outdoor activities during peak pollution hours.`;
+                        } else {
+                          return `Air quality has improved by ${Math.abs(
+                            change
+                          )} AQI points compared to last week. Great time for outdoor activities!`;
+                        }
+                      })()}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
   );
 }
-
