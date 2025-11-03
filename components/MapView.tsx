@@ -97,8 +97,8 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
     }
 
     mapRef.current = L.map(mapContainerRef.current, {
-      zoomControl: false, // Disable default zoom control
-    }).setView([latitude, longitude], 12);
+      zoomControl: false as any, // Disable default zoom control
+    } as L.MapOptions).setView([latitude, longitude], 12);
 
     // Add zoom control in top-right position
     L.control.zoom({ position: "topright" }).addTo(mapRef.current);
@@ -376,10 +376,10 @@ export default function MapView({ latitude, longitude, aqi }: MapViewProps) {
         }
 
         console.log(
-          `🏭 Fetching pollution sources for [${latitude}, ${longitude}] radius=${searchRadius}km`
+          `🏭 Fetching pollution sources for [${mapCenter[0]}, ${mapCenter[1]}] radius=${searchRadius}km`
         );
         const response = await fetch(
-          `/api/pollution-sources?latitude=${latitude}&longitude=${longitude}&radius=${searchRadius}`
+          `/api/pollution-sources?latitude=${mapCenter[0]}&longitude=${mapCenter[1]}&radius=${searchRadius}`
         );
         const data = await response.json();
         console.log(
