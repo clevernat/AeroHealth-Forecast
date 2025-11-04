@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { PollenData } from "@/types";
 import { getPollenCategory } from "@/lib/utils";
 
-// Force dynamic rendering and disable caching for real-time data
+// Enable caching with 5-minute revalidation for better performance
 export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 300; // 5 minutes
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -19,16 +19,11 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Fetch pollen data from Open-Meteo with cache-busting and real-time settings
+    // Fetch pollen data from Open-Meteo with 5-minute cache
     const pollenUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${latitude}&longitude=${longitude}&hourly=alder_pollen,birch_pollen,grass_pollen,mugwort_pollen,olive_pollen,ragweed_pollen&timezone=auto&forecast_days=5`;
 
     const response = await fetch(pollenUrl, {
-      cache: "no-store", // Disable Next.js caching for real-time data
-      headers: {
-        "Cache-Control": "no-cache, no-store, must-revalidate",
-        Pragma: "no-cache",
-        Expires: "0",
-      },
+      next: { revalidate: 300 }, // Cache for 5 minutes
     });
 
     if (!response.ok) {

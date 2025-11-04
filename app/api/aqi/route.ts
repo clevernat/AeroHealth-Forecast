@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { AQIData, HourlyForecast, DailyForecast } from "@/types";
 import { getAQICategory, getPrimaryPollutant } from "@/lib/utils";
 
-// Force dynamic rendering and disable caching for real-time data
+// Enable caching with 5-minute revalidation for better performance
 export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 300; // 5 minutes
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -19,16 +19,11 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Fetch air quality data from Open-Meteo with cache-busting and real-time settings
+    // Fetch air quality data from Open-Meteo with 5-minute cache
     const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${latitude}&longitude=${longitude}&hourly=pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,sulphur_dioxide,ozone,us_aqi&timezone=auto&forecast_days=7`;
 
     const response = await fetch(aqiUrl, {
-      cache: "no-store", // Disable Next.js caching for real-time data
-      headers: {
-        "Cache-Control": "no-cache, no-store, must-revalidate",
-        Pragma: "no-cache",
-        Expires: "0",
-      },
+      next: { revalidate: 300 }, // Cache for 5 minutes
     });
 
     if (!response.ok) {

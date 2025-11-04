@@ -140,31 +140,15 @@ export default function Home() {
         // Add timestamp to prevent caching and ensure real-time data
         const timestamp = new Date().getTime();
 
-        // Fetch all data in parallel for faster loading
-        const [aqiResponse, pollenResponse, sourcesResponse] =
-          await Promise.all([
-            fetch(
-              `/api/aqi?latitude=${loc.latitude}&longitude=${loc.longitude}&t=${timestamp}`,
-              {
-                cache: "no-store",
-                headers: {
-                  "Cache-Control": "no-cache",
-                },
-              }
-            ),
-            fetch(
-              `/api/pollen?latitude=${loc.latitude}&longitude=${loc.longitude}&t=${timestamp}`,
-              {
-                cache: "no-store",
-                headers: {
-                  "Cache-Control": "no-cache",
-                },
-              }
-            ),
-            fetch(
-              `/api/pollution-sources?latitude=${loc.latitude}&longitude=${loc.longitude}&radius=50`
-            ).catch(() => null), // Don't fail if pollution sources fail
-          ]);
+        // Fetch only critical data first (AQI and Pollen) for fast initial load
+        const [aqiResponse, pollenResponse] = await Promise.all([
+          fetch(
+            `/api/aqi?latitude=${loc.latitude}&longitude=${loc.longitude}&t=${timestamp}`
+          ),
+          fetch(
+            `/api/pollen?latitude=${loc.latitude}&longitude=${loc.longitude}&t=${timestamp}`
+          ),
+        ]);
 
         // Process AQI data
         if (!aqiResponse.ok) throw new Error("Failed to fetch AQI data");
@@ -193,12 +177,6 @@ export default function Home() {
           }))
         );
 
-        // Process pollution sources
-        if (sourcesResponse && sourcesResponse.ok) {
-          const sourcesJson = await sourcesResponse.json();
-          setPollutionSources(sourcesJson.sources || []);
-        }
-
         // Update last updated timestamp
         setLastUpdated(new Date());
       } catch (err) {
@@ -216,6 +194,20 @@ export default function Home() {
     if (!location) return;
     fetchData(location);
   }, [location, fetchData]);
+
+  // Lazy load pollution sources when map view is active
+  useEffect(() => {
+    if (!location || activeView !== "map" || pollutionSources.length > 0)
+      return;
+
+    console.log("Loading pollution sources for map view...");
+    fetch(
+      `/api/pollution-sources?latitude=${location.latitude}&longitude=${location.longitude}&radius=50`
+    )
+      .then((res) => res.json())
+      .then((data) => setPollutionSources(data.sources || []))
+      .catch((err) => console.error("Pollution sources error:", err));
+  }, [location, activeView, pollutionSources.length]);
 
   // Auto-refresh every 30 minutes
   useEffect(() => {
@@ -279,7 +271,7 @@ export default function Home() {
     }
   };
 
-  if (loading) {
+  if (loading && !aqiData) {
     return (
       <main className="min-h-screen flex items-center justify-center p-8">
         <div className="text-center">
@@ -294,7 +286,10 @@ export default function Home() {
               AeroHealth Forecast
             </h2>
             <p className="mt-3 text-white/90 text-base font-medium">
-              Loading air quality and pollen data...
+              Getting your location and air quality data...
+            </p>
+            <p className="mt-2 text-white/60 text-sm">
+              This should only take a moment
             </p>
           </div>
         </div>
