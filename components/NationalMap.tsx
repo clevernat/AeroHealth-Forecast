@@ -27,12 +27,14 @@ export default function NationalMap() {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const geoJsonLayerRef = useRef<any>(null);
   const markersLayerRef = useRef<any>(null);
-  
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [aqiData, setAqiData] = useState<NationalAQIData | null>(null);
   const [viewMode, setViewMode] = useState<"counties" | "markers">("markers");
   const [selectedCounty, setSelectedCounty] = useState<CountyAQI | null>(null);
+  const [countiesGeoJSON, setCountiesGeoJSON] = useState<any>(null);
+  const [loadingGeoJSON, setLoadingGeoJSON] = useState(false);
 
   // Get AQI color
   const getAQIColor = (aqi: number): string => {
@@ -58,7 +60,8 @@ export default function NationalMap() {
 
     // Add tile layer
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      attribution:
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       maxZoom: 18,
     }).addTo(mapRef.current);
 
@@ -70,20 +73,31 @@ export default function NationalMap() {
       div.style.padding = "10px";
       div.style.borderRadius = "8px";
       div.style.boxShadow = "0 2px 4px rgba(0,0,0,0.2)";
-      
+
       const grades = [0, 51, 101, 151, 201, 301];
-      const labels = ["Good", "Moderate", "Unhealthy for Sensitive", "Unhealthy", "Very Unhealthy", "Hazardous"];
-      
-      div.innerHTML = "<h4 style='margin: 0 0 8px 0; font-weight: bold;'>AQI Legend</h4>";
-      
+      const labels = [
+        "Good",
+        "Moderate",
+        "Unhealthy for Sensitive",
+        "Unhealthy",
+        "Very Unhealthy",
+        "Hazardous",
+      ];
+
+      div.innerHTML =
+        "<h4 style='margin: 0 0 8px 0; font-weight: bold;'>AQI Legend</h4>";
+
       for (let i = 0; i < grades.length; i++) {
         div.innerHTML +=
           '<div style="display: flex; align-items: center; margin: 4px 0;">' +
-          '<i style="background:' + getAQIColor(grades[i] + 1) + 
+          '<i style="background:' +
+          getAQIColor(grades[i] + 1) +
           '; width: 18px; height: 18px; display: inline-block; margin-right: 8px; border-radius: 3px;"></i> ' +
-          '<span style="font-size: 12px;">' + labels[i] + '</span></div>';
+          '<span style="font-size: 12px;">' +
+          labels[i] +
+          "</span></div>";
       }
-      
+
       return div;
     };
     legend.addTo(mapRef.current);
@@ -142,7 +156,7 @@ export default function NationalMap() {
 
     aqiData.counties.forEach((county) => {
       const color = getAQIColor(county.aqi);
-      
+
       const marker = L.circleMarker([county.latitude, county.longitude], {
         radius: 12,
         fillColor: color,
@@ -177,8 +191,123 @@ export default function NationalMap() {
 
     markersLayer.addTo(mapRef.current);
     markersLayerRef.current = markersLayer;
-
   }, [aqiData, viewMode]);
+
+  // Load GeoJSON when switching to counties view
+  useEffect(() => {
+    if (viewMode !== "counties" || countiesGeoJSON) return;
+
+    const fetchGeoJSON = async () => {
+      try {
+        setLoadingGeoJSON(true);
+        const response = await fetch("/api/counties-geojson");
+        if (!response.ok) {
+          throw new Error("Failed to fetch counties GeoJSON");
+        }
+        const data = await response.json();
+        setCountiesGeoJSON(data);
+      } catch (err) {
+        console.error("Error fetching counties GeoJSON:", err);
+        setError("Failed to load county boundaries");
+      } finally {
+        setLoadingGeoJSON(false);
+      }
+    };
+
+    fetchGeoJSON();
+  }, [viewMode, countiesGeoJSON]);
+
+  // Render county choropleth
+  useEffect(() => {
+    if (
+      !L ||
+      !mapRef.current ||
+      !countiesGeoJSON ||
+      !aqiData ||
+      viewMode !== "counties"
+    ) {
+      // Remove GeoJSON layer if switching away
+      if (geoJsonLayerRef.current && mapRef.current) {
+        mapRef.current.removeLayer(geoJsonLayerRef.current);
+        geoJsonLayerRef.current = null;
+      }
+      return;
+    }
+
+    // Remove old GeoJSON layer
+    if (geoJsonLayerRef.current) {
+      mapRef.current.removeLayer(geoJsonLayerRef.current);
+    }
+
+    // Create a map of FIPS to AQI for quick lookup
+    const fipsToAQI: Record<string, CountyAQI> = {};
+    aqiData.counties.forEach((county) => {
+      fipsToAQI[county.fips] = county;
+    });
+
+    // Style function for counties
+    const style = (feature: any) => {
+      const fips = feature.id || feature.properties.GEO_ID?.slice(-5);
+      const countyData = fipsToAQI[fips];
+
+      // Default to light gray if no data
+      const fillColor = countyData ? getAQIColor(countyData.aqi) : "#cccccc";
+
+      return {
+        fillColor: fillColor,
+        weight: 1,
+        opacity: 0.5,
+        color: "white",
+        fillOpacity: countyData ? 0.6 : 0.2,
+      };
+    };
+
+    // Create GeoJSON layer
+    const geoJsonLayer = L.geoJSON(countiesGeoJSON, {
+      style: style,
+      onEachFeature: (feature: any, layer: any) => {
+        const fips = feature.id || feature.properties.GEO_ID?.slice(-5);
+        const countyData = fipsToAQI[fips];
+
+        if (countyData) {
+          layer.bindPopup(`
+            <div style="font-family: sans-serif; min-width: 200px;">
+              <h3 style="margin: 0 0 8px 0; font-size: 14px; font-weight: bold;">${
+                countyData.name
+              }</h3>
+              <div style="margin: 4px 0;">
+                <strong>AQI:</strong>
+                <span style="color: ${getAQIColor(
+                  countyData.aqi
+                )}; font-weight: bold; font-size: 18px;">${
+            countyData.aqi
+          }</span>
+              </div>
+              <div style="margin: 4px 0;">
+                <strong>Category:</strong> ${countyData.category}
+              </div>
+            </div>
+          `);
+
+          layer.on("click", () => {
+            setSelectedCounty(countyData);
+          });
+        } else {
+          const countyName = feature.properties.NAME || "Unknown County";
+          const stateName = feature.properties.STATE || "";
+          layer.bindPopup(`
+            <div style="font-family: sans-serif;">
+              <h3 style="margin: 0 0 8px 0; font-size: 14px; font-weight: bold;">${countyName}</h3>
+              <p style="margin: 0; color: #666; font-size: 12px;">No AQI data available for this county</p>
+            </div>
+          `);
+        }
+      },
+    });
+
+    geoJsonLayer.addTo(mapRef.current);
+    geoJsonLayerRef.current = geoJsonLayer;
+  }, [countiesGeoJSON, aqiData, viewMode]);
 
   return (
     <div className="space-y-4">
@@ -194,7 +323,8 @@ export default function NationalMap() {
             </p>
             {aqiData && (
               <p className="text-white/60 text-xs mt-1">
-                Showing {aqiData.count} locations • Updated {new Date(aqiData.timestamp).toLocaleTimeString()}
+                Showing {aqiData.count} locations • Updated{" "}
+                {new Date(aqiData.timestamp).toLocaleTimeString()}
               </p>
             )}
           </div>
@@ -218,8 +348,6 @@ export default function NationalMap() {
                   ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg"
                   : "bg-white/10 text-white/70 hover:bg-white/20"
               }`}
-              disabled
-              title="County choropleth view (coming soon)"
             >
               🗺️ County View
             </button>
@@ -233,7 +361,23 @@ export default function NationalMap() {
           <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-2xl z-10">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-              <p className="text-white font-medium">Loading national air quality data...</p>
+              <p className="text-white font-medium">
+                Loading national air quality data...
+              </p>
+            </div>
+          </div>
+        )}
+
+        {loadingGeoJSON && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-2xl z-10">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+              <p className="text-white font-medium">
+                Loading county boundaries...
+              </p>
+              <p className="text-white/60 text-sm mt-2">
+                This may take a moment (3000+ counties)
+              </p>
             </div>
           </div>
         )}
@@ -259,8 +403,12 @@ export default function NationalMap() {
         <div className="glass-light rounded-2xl p-6">
           <div className="flex items-start justify-between mb-4">
             <div>
-              <h3 className="text-xl font-bold text-white mb-1">{selectedCounty.name}</h3>
-              <p className="text-white/60 text-sm">Detailed Air Quality Information</p>
+              <h3 className="text-xl font-bold text-white mb-1">
+                {selectedCounty.name}
+              </h3>
+              <p className="text-white/60 text-sm">
+                Detailed Air Quality Information
+              </p>
             </div>
             <button
               onClick={() => setSelectedCounty(null)}
@@ -282,16 +430,18 @@ export default function NationalMap() {
             </div>
             <div className="bg-white/5 rounded-lg p-4">
               <p className="text-white/60 text-sm mb-1">Category</p>
-              <p className="text-white font-medium">{selectedCounty.category}</p>
+              <p className="text-white font-medium">
+                {selectedCounty.category}
+              </p>
             </div>
           </div>
 
           <p className="text-white/60 text-sm mt-4">
-            💡 Tip: Use the location search in the main dashboard to get detailed hourly and daily forecasts for this area.
+            💡 Tip: Use the location search in the main dashboard to get
+            detailed hourly and daily forecasts for this area.
           </p>
         </div>
       )}
     </div>
   );
 }
-
