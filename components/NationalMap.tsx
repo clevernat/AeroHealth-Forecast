@@ -82,9 +82,14 @@ export default function NationalMap() {
     legend.onAdd = function () {
       const div = L.DomUtil.create("div", "info legend");
       div.style.background = "white";
-      div.style.padding = "10px";
+      div.style.padding = "12px";
       div.style.borderRadius = "8px";
-      div.style.boxShadow = "0 2px 4px rgba(0,0,0,0.2)";
+      div.style.boxShadow = "0 2px 6px rgba(0,0,0,0.3)";
+      div.style.fontFamily = "Arial, sans-serif";
+      div.style.fontSize = "13px";
+      div.style.lineHeight = "1.5";
+      div.style.minWidth = "180px";
+      div.style.zIndex = "1000";
 
       const grades = [0, 51, 101, 151, 201, 301];
       const labels = [
@@ -96,20 +101,21 @@ export default function NationalMap() {
         "Hazardous",
       ];
 
-      div.innerHTML =
-        "<h4 style='margin: 0 0 8px 0; font-weight: bold;'>AQI Legend</h4>";
+      let html =
+        "<div style='margin: 0 0 8px 0; font-weight: bold; font-size: 14px; color: #000;'>AQI Legend</div>";
 
       for (let i = 0; i < grades.length; i++) {
-        div.innerHTML +=
-          '<div style="display: flex; align-items: center; margin: 4px 0;">' +
-          '<i style="background:' +
+        html +=
+          '<div style="display: flex; align-items: center; margin: 4px 0; white-space: nowrap;">' +
+          '<div style="background:' +
           getAQIColor(grades[i] + 1) +
-          '; width: 18px; height: 18px; display: inline-block; margin-right: 8px; border-radius: 3px;"></i> ' +
-          '<span style="font-size: 12px;">' +
+          '; width: 20px; height: 20px; display: inline-block; margin-right: 8px; border-radius: 3px; flex-shrink: 0;"></div>' +
+          '<div style="font-size: 13px; color: #333; flex: 1;">' +
           labels[i] +
-          "</span></div>";
+          "</div></div>";
       }
 
+      div.innerHTML = html;
       return div;
     };
     legend.addTo(mapRef.current);
@@ -337,6 +343,12 @@ export default function NationalMap() {
               <p className="text-white/60 text-xs mt-1">
                 Showing {aqiData.count} locations • Updated{" "}
                 {new Date(aqiData.timestamp).toLocaleTimeString()}
+              </p>
+            )}
+            {viewMode === "counties" && (
+              <p className="text-yellow-300/80 text-sm mt-2 flex items-center gap-1">
+                ℹ️ County view shows all U.S. counties. Colored counties have
+                real-time AQI data from major cities.
               </p>
             )}
           </div>
