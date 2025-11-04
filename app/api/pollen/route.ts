@@ -3,7 +3,6 @@ import { PollenData } from "@/types";
 import { getPollenCategory } from "@/lib/utils";
 
 // Enable caching with 5-minute revalidation for better performance
-export const dynamic = "force-dynamic";
 export const revalidate = 300; // 5 minutes
 
 export async function GET(request: NextRequest) {

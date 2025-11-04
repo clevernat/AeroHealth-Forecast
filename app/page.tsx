@@ -144,21 +144,39 @@ export default function Home() {
         const [aqiResponse, pollenResponse] = await Promise.all([
           fetch(
             `/api/aqi?latitude=${loc.latitude}&longitude=${loc.longitude}&t=${timestamp}`
-          ),
+          ).catch((err) => {
+            console.error("AQI fetch error:", err);
+            throw new Error(
+              "Failed to fetch AQI data. Please check your connection."
+            );
+          }),
           fetch(
             `/api/pollen?latitude=${loc.latitude}&longitude=${loc.longitude}&t=${timestamp}`
-          ),
+          ).catch((err) => {
+            console.error("Pollen fetch error:", err);
+            throw new Error(
+              "Failed to fetch pollen data. Please check your connection."
+            );
+          }),
         ]);
 
         // Process AQI data
-        if (!aqiResponse.ok) throw new Error("Failed to fetch AQI data");
+        if (!aqiResponse.ok) {
+          const errorText = await aqiResponse.text();
+          console.error("AQI API error:", errorText);
+          throw new Error("Failed to fetch AQI data");
+        }
         const aqiJson = await aqiResponse.json();
         setAqiData(aqiJson.current);
         setHourlyForecast(aqiJson.hourly);
         setDailyForecast(aqiJson.daily);
 
         // Process pollen data
-        if (!pollenResponse.ok) throw new Error("Failed to fetch pollen data");
+        if (!pollenResponse.ok) {
+          const errorText = await pollenResponse.text();
+          console.error("Pollen API error:", errorText);
+          throw new Error("Failed to fetch pollen data");
+        }
         const pollenJson = await pollenResponse.json();
         setPollenData(pollenJson.current);
 
@@ -180,7 +198,12 @@ export default function Home() {
         // Update last updated timestamp
         setLastUpdated(new Date());
       } catch (err) {
-        setError(err instanceof Error ? err.message : "An error occurred");
+        console.error("Data fetch error:", err);
+        setError(
+          err instanceof Error
+            ? err.message
+            : "An error occurred while loading data"
+        );
       } finally {
         setLoading(false);
         setIsRefreshing(false);
@@ -204,9 +227,19 @@ export default function Home() {
     fetch(
       `/api/pollution-sources?latitude=${location.latitude}&longitude=${location.longitude}&radius=50`
     )
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) {
+          console.warn("Pollution sources API returned error:", res.status);
+          return { sources: [] };
+        }
+        return res.json();
+      })
       .then((data) => setPollutionSources(data.sources || []))
-      .catch((err) => console.error("Pollution sources error:", err));
+      .catch((err) => {
+        console.error("Pollution sources error:", err);
+        // Don't show error to user, just log it - this is non-critical data
+        setPollutionSources([]);
+      });
   }, [location, activeView, pollutionSources.length]);
 
   // Auto-refresh every 30 minutes
